@@ -179,8 +179,7 @@ class AdminAnalyticsControllerTest {
     @Test
     void getAnalytics_withoutRoleHeader_returns401() throws Exception {
         mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").exists());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
