@@ -2,14 +2,18 @@ package com.microservices.analytics_report.admin.controller;
 
 import com.microservices.analytics_report.analytics.dto.AnalyticsDtos;
 import com.microservices.analytics_report.analytics.service.AnalyticsService;
+import com.microservices.analytics_report.security.GatewayRoleHelper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,8 +33,11 @@ public class AdminAnalyticsController {
             description = "Returns aggregated metrics across all branches for the specified date range.",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<AnalyticsDtos.AdminAnalyticsResponse> getAnalytics(
+            @Parameter(description = "Caller role from API gateway (or set manually when testing the service directly)")
+            @RequestHeader(value = "X-User-Role", required = false) String userRole,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        assertAdminRole(userRole);
         LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         log.info("GET /admin/analytics from={} to={}", start, end);
@@ -43,11 +50,24 @@ public class AdminAnalyticsController {
             description = "Returns orders and revenue broken down by branch for the specified date range.",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<List<AnalyticsDtos.BranchAnalyticsResponse>> getBranchAnalytics(
+            @Parameter(description = "Caller role from API gateway (or set manually when testing the service directly)")
+            @RequestHeader(value = "X-User-Role", required = false) String userRole,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        assertAdminRole(userRole);
         LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         log.info("GET /admin/analytics/branches from={} to={}", start, end);
         return ResponseEntity.ok(analyticsService.getBranchAnalytics(start, end));
+    }
+
+    private void assertAdminRole(String userRole) {
+        if (userRole == null || userRole.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Authentication required — X-User-Role header missing (use gateway or send HEAD_OFFICE_ADMIN / Admin)");
+        }
+        if (!GatewayRoleHelper.isHeadOfficeAdminRole(userRole)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+        }
     }
 }

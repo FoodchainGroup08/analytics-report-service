@@ -8,8 +8,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,7 +34,7 @@ public class ManagerController {
             @RequestHeader(value = "X-User-BranchId", required = false) String branchIdHeader,
             @RequestParam(required = false) String branchId) {
         String bid = branchId != null ? branchId : branchIdHeader;
-        if (bid == null) return ResponseEntity.badRequest().build();
+        requireBranchId(bid);
         log.info("GET /manager/dashboard branchId={}", bid);
         return ResponseEntity.ok(analyticsService.getManagerDashboard(bid, LocalDate.now()));
     }
@@ -46,7 +48,7 @@ public class ManagerController {
             @RequestHeader(value = "X-User-BranchId", required = false) String branchIdHeader,
             @RequestParam(required = false) String branchId) {
         String bid = branchId != null ? branchId : branchIdHeader;
-        if (bid == null) return ResponseEntity.badRequest().build();
+        requireBranchId(bid);
         log.info("GET /manager/orders/live branchId={}", bid);
         return ResponseEntity.ok(analyticsService.getManagerLiveOrders(bid));
     }
@@ -61,7 +63,7 @@ public class ManagerController {
             @RequestParam(required = false) String branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         String bid = branchId != null ? branchId : branchIdHeader;
-        if (bid == null) return ResponseEntity.badRequest().build();
+        requireBranchId(bid);
         LocalDate targetDate = date != null ? date : LocalDate.now();
         log.info("GET /manager/sales/daily branchId={} date={}", bid, targetDate);
         return ResponseEntity.ok(analyticsService.getDailySales(bid, targetDate));
@@ -76,8 +78,15 @@ public class ManagerController {
             @RequestHeader(value = "X-User-BranchId", required = false) String branchIdHeader,
             @RequestParam(required = false) String branchId) {
         String bid = branchId != null ? branchId : branchIdHeader;
-        if (bid == null) return ResponseEntity.badRequest().build();
+        requireBranchId(bid);
         log.info("GET /manager/items/popular branchId={}", bid);
         return ResponseEntity.ok(analyticsService.getPopularItems(bid, LocalDate.now()));
+    }
+
+    private static void requireBranchId(String bid) {
+        if (bid == null || bid.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "branchId is required — use query parameter branchId or X-User-BranchId header");
+        }
     }
 }

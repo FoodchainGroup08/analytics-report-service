@@ -46,6 +46,7 @@ class AdminAnalyticsControllerTest {
                 .thenReturn(response);
 
         mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api")
+                        .header("X-User-Role", "HEAD_OFFICE_ADMIN")
                         .param("startDate", "2026-04-01")
                         .param("endDate", "2026-04-30"))
                 .andExpect(status().isOk())
@@ -71,7 +72,8 @@ class AdminAnalyticsControllerTest {
         when(analyticsService.getAdminAnalytics(any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api"))
+        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api")
+                        .header("X-User-Role", "HEAD_OFFICE_ADMIN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalOrders").value(0));
     }
@@ -95,7 +97,8 @@ class AdminAnalyticsControllerTest {
         when(analyticsService.getAdminAnalytics(any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api"))
+        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api")
+                        .header("X-User-Role", "HEAD_OFFICE_ADMIN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dailyBreakdown[0].hour").value("09:00"))
                 .andExpect(jsonPath("$.dailyBreakdown[0].revenue").value(500.0))
@@ -127,6 +130,7 @@ class AdminAnalyticsControllerTest {
                 .thenReturn(branchList);
 
         mockMvc.perform(get("/api/v1/admin/analytics/branches").contextPath("/api")
+                        .header("X-User-Role", "HEAD_OFFICE_ADMIN")
                         .param("startDate", "2026-04-01")
                         .param("endDate", "2026-04-30"))
                 .andExpect(status().isOk())
@@ -143,7 +147,8 @@ class AdminAnalyticsControllerTest {
         when(analyticsService.getBranchAnalytics(any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/admin/analytics/branches").contextPath("/api"))
+        mockMvc.perform(get("/api/v1/admin/analytics/branches").contextPath("/api")
+                        .header("X-User-Role", "HEAD_OFFICE_ADMIN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
@@ -163,10 +168,45 @@ class AdminAnalyticsControllerTest {
         when(analyticsService.getBranchAnalytics(any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(branchList);
 
-        mockMvc.perform(get("/api/v1/admin/analytics/branches").contextPath("/api"))
+        mockMvc.perform(get("/api/v1/admin/analytics/branches").contextPath("/api")
+                        .header("X-User-Role", "HEAD_OFFICE_ADMIN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value("branch-xyz"));
+    }
+
+    @Test
+    void getAnalytics_withoutRoleHeader_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void getAnalytics_withCustomerRole_returns403() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api")
+                        .header("X-User-Role", "CUSTOMER"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getAnalytics_displayNameAdmin_isAccepted() throws Exception {
+        AnalyticsDtos.AdminAnalyticsResponse response = AnalyticsDtos.AdminAnalyticsResponse.builder()
+                .totalOrders(1L)
+                .totalRevenue(10.0)
+                .averageOrderValue(10.0)
+                .totalBranches(1L)
+                .totalCustomers(0L)
+                .dailyBreakdown(List.of())
+                .build();
+
+        when(analyticsService.getAdminAnalytics(any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api")
+                        .header("X-User-Role", "Admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalOrders").value(1));
     }
 }
