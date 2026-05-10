@@ -1,6 +1,6 @@
 # FoodChain — Analytics & Report Service
 
-Spring Boot microservice that consumes Kafka order events, persists per-branch daily summaries, and exposes REST endpoints for manager dashboards, admin analytics, and business reports.
+Spring Boot microservice that consumes Kafka order events, persists per-branch analytics rows, rolls up daily summaries, and exposes REST APIs for manager dashboards, admin metrics, and generated reports.
 
 ---
 
@@ -8,80 +8,87 @@ Spring Boot microservice that consumes Kafka order events, persists per-branch d
 
 | Item | Value |
 |---|---|
-| Port | **8085** |
-| Context path | `/api` |
-| Base URL (local) | `http://localhost:8085/api` |
-| Via API Gateway | `http://localhost:8080/api` |
+| Port | **8085** (`SERVER_PORT` overrides) |
+| Context path | **`/api`** |
+| Direct base URL | `http://localhost:8085/api` |
+| Via API Gateway | **`http://localhost:8080`** — REST routes are under **`/api/v1/...`** (see route table in **api-gateway** README) |
 | Database | MySQL — `analytics_report_db` |
-| Cache | Redis (localhost:6379) |
-| Events | Kafka (localhost:9092) |
-| Service registry | Eureka (localhost:8761) |
+| Cache | Redis |
+| Events | Kafka (`order.received`, `order.status.updated`, optional `analytics.daily.rollup`) |
+| Registry | Eureka |
+
+Controllers use versioned paths **`/v1/analytics`**, **`/v1/reports`**, **`/v1/manager`**, **`/v1/admin/analytics`** on this service (after context path: **`/api/v1/...`**).
 
 ---
 
-## Kafka Topics Consumed
+## Kafka topics consumed
 
-| Topic | Event | Action |
-|---|---|---|
-| `order-received` | `OrderReceivedEvent` | Persist `OrderAnalytics` row |
-| `order-status-updated` | `OrderStatusUpdatedEvent` | Update order status in `OrderAnalytics` |
+| Topic | Purpose |
+|---|---|
+| **`order.received`** | New order — persists / updates `OrderAnalytics` |
+| **`order.status.updated`** | Status change — updates analytics row |
+| **`analytics.daily.rollup`** | Optional message (often an ISO date string) — triggers `computeDailySummaries` for that date |
 
-A scheduled job runs every midnight and rolls up `OrderAnalytics` rows into `BranchDailySummary` entries.
-
----
-
-## All Endpoints
-
-### Analytics — `/analytics`
-
-| Method | Path | Description |
-|---|---|---|
-| GET | `/analytics/dashboard` | All-branch overview for a date (defaults to today) |
-| GET | `/analytics/branch/{branchId}/summary` | Daily summary for one branch on a specific date |
-| GET | `/analytics/branch/{branchId}/summaries` | Range of daily summaries for one branch |
-| GET | `/analytics/branch/{branchId}/orders` | Paginated raw order records for a branch |
-| POST | `/analytics/rollup` | Manually trigger daily rollup for a date |
-
-### Reports — `/reports`
-
-| Method | Path | Description |
-|---|---|---|
-| POST | `/reports/generate` | Generate a report for a branch and date range |
-| GET | `/reports/{id}` | Fetch a previously generated report by ID |
-| GET | `/reports` | List all reports (paginated) |
-
-### Manager Dashboard — `/manager`
-
-| Method | Path | Description |
-|---|---|---|
-| GET | `/manager/dashboard` | Today's key metrics for the manager's branch |
-| GET | `/manager/orders/live` | Currently active orders at the manager's branch |
-| GET | `/manager/sales/daily` | Hourly revenue/orders for a date (defaults to today) |
-| GET | `/manager/items/popular` | Top-selling items for the manager's branch today |
-
-### Admin Analytics — `/admin`
-
-| Method | Path | Description |
-|---|---|---|
-| GET | `/admin/analytics` | System-wide aggregated metrics for a date range |
-| GET | `/admin/analytics/branches` | Per-branch orders and revenue for a date range |
+A **`@Scheduled`** job also runs daily to roll `OrderAnalytics` into **`BranchDailySummary`**.
 
 ---
 
-## How branchId is passed for Manager Endpoints
+## Endpoints
 
-Each manager endpoint accepts `branchId` via two mechanisms (param takes precedence):
+Paths below are the servlet mappings **after** `/api` (add **`http://localhost:8085`** for direct calls, or **`http://localhost:8080`** for gateway — gateway paths match **`/api` + these suffixes**).
 
-1. **Query parameter** — `?branchId=<uuid>`
-2. **Request header** — `X-User-BranchId: <uuid>`
+### Analytics — `/v1/analytics`
 
-The API Gateway is expected to inject `X-User-BranchId` from the authenticated JWT. If neither is provided the endpoint returns `400 Bad Request`.
+| Method | Path | Description |
+|---|---|---|
+| GET | `/v1/analytics/dashboard` | All-branch overview for a date (defaults to today) |
+| GET | `/v1/analytics/branch/{branchId}/summary` | Daily summary for one branch on a date |
+| GET | `/v1/analytics/branch/{branchId}/summaries` | Date range of summaries |
+| GET | `/v1/analytics/branch/{branchId}/orders` | Paginated raw analytics rows for a branch |
+| POST | `/v1/analytics/rollup` | Manually trigger rollup for a date |
+
+### Reports — `/v1/reports`
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/v1/reports/generate` | Generate a report |
+| GET | `/v1/reports/{id}` | Fetch report by ID |
+| GET | `/v1/reports` | Paginated list |
+
+### Manager — `/v1/manager`
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/v1/manager/dashboard` | Today’s metrics for the manager’s branch |
+| GET | `/v1/manager/orders/live` | Active orders at the branch |
+| GET | `/v1/manager/sales/daily` | Hourly revenue for a date |
+| GET | `/v1/manager/items/popular` | Popular items (may be empty — see limitations) |
+
+### Admin analytics — `/v1/admin/analytics`
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/v1/admin/analytics` | System-wide metrics for a date range |
+| GET | `/v1/admin/analytics/branches` | Per-branch orders/revenue for a range |
+
+**Authorization:** These admin endpoints expect **`X-User-Role`** (forwarded by the API gateway). Accepted roles include **`HEAD_OFFICE_ADMIN`**, **`OFFICE_ADMIN`**, and **`Admin`** (case-insensitive). Missing header → **401**; wrong role → **403**.
 
 ---
 
-## Response Shapes
+## Manager endpoints — `branchId`
 
-### Manager Dashboard — `GET /manager/dashboard`
+Each manager endpoint resolves **`branchId`** from:
+
+1. Query **`?branchId=`** (wins if both present), or  
+2. Header **`X-User-BranchId`** (from JWT via gateway).
+
+If neither is set, the service responds with **400** (`ResponseStatusException`).
+
+---
+
+## Response shapes (abbrev.)
+
+### Manager dashboard — `GET /v1/manager/dashboard`
 
 ```json
 {
@@ -93,104 +100,48 @@ The API Gateway is expected to inject `X-User-BranchId` from the authenticated J
 }
 ```
 
-`ordersChange` and `revenueChange` are percentage changes vs the previous day. Returns `0.0` when no prior-day data exists.
+### Daily sales — `GET /v1/manager/sales/daily?date=YYYY-MM-DD`
 
-### Daily Sales — `GET /manager/sales/daily?date=YYYY-MM-DD`
+Hourly buckets (business hours). Revenue reflects completed orders only.
 
-Array of hourly slots (business hours 08:00–22:00). Revenue reflects completed orders only.
+### Popular items — `GET /v1/manager/items/popular`
 
-```json
-[
-  { "hour": "08:00", "revenue": 0.0, "orders": 0 },
-  { "hour": "09:00", "revenue": 320.50, "orders": 11 },
-  { "hour": "10:00", "revenue": 415.00, "orders": 14 }
-]
-```
+Often **`[]`** until item-level aggregation exists (see limitations).
 
-### Popular Items — `GET /manager/items/popular`
+### Live orders — `GET /v1/manager/orders/live`
 
-Returns an empty array until item-level analytics are available (see TODO note below).
+`tableNumber` / `customerName` may be **`null`** if not stored in analytics rows.
 
-```json
-[]
-```
+### Admin — `GET /v1/admin/analytics` / `GET /v1/admin/analytics/branches`
 
-### Live Orders — `GET /manager/orders/live`
-
-```json
-[
-  {
-    "id": "order-uuid",
-    "status": "PREPARING",
-    "orderType": "DINE_IN",
-    "tableNumber": null,
-    "customerName": null,
-    "createdAt": "2026-05-10T12:30:00",
-    "totalAmount": 55.00,
-    "itemCount": 3
-  }
-]
-```
-
-`tableNumber` and `customerName` are `null` — not stored in `OrderAnalytics`. These would require enrichment from order-service.
-
-### Admin Analytics — `GET /admin/analytics`
-
-```json
-{
-  "totalOrders": 5000,
-  "totalRevenue": 148250.00,
-  "averageOrderValue": 29.65,
-  "totalBranches": 8,
-  "totalCustomers": 0,
-  "dailyBreakdown": []
-}
-```
-
-`totalCustomers` is `0` — not tracked at summary level. `dailyBreakdown` is an empty array (hourly admin-level aggregation not yet implemented).
-
-### Branch Analytics — `GET /admin/analytics/branches`
-
-```json
-[
-  { "id": "branch-uuid-001", "name": "branch-uuid-001", "orders": 1200, "revenue": 36000.00 },
-  { "id": "branch-uuid-002", "name": "branch-uuid-002", "orders": 900,  "revenue": 27500.00 }
-]
-```
-
-`name` is the `branchId` string — branch names require a call to branch-service which is not currently wired.
+See inline Swagger descriptions; `totalCustomers` / branch **names** may be placeholders until enrichment exists.
 
 ---
 
-## Data Aggregation
+## Data flow
 
-1. **Kafka consumer** listens to `order-received` and `order-status-updated` topics.
-2. Each event upserts/updates a row in the `order_analytics` table.
-3. A scheduled job (`@Scheduled(cron = "0 0 0 * * *")`) rolls up all orders from the previous day into `branch_daily_summary` rows grouped by `branchId`.
-4. Manager and admin endpoints read from `branch_daily_summary` (aggregated) and `order_analytics` (live orders).
-
----
-
-## Environment Variables / Configuration
-
-| Variable | Default | Description |
-|---|---|---|
-| `SPRING_DATASOURCE_URL` | `jdbc:mysql://localhost:3306/analytics_report_db` | MySQL JDBC URL |
-| `SPRING_DATASOURCE_USERNAME` | `root` | MySQL username |
-| `SPRING_DATASOURCE_PASSWORD` | `root` | MySQL password |
-| `SPRING_DATA_REDIS_HOST` | `localhost` | Redis host |
-| `SPRING_DATA_REDIS_PORT` | `6379` | Redis port |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Kafka bootstrap servers |
-| `EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE` | `http://localhost:8761/eureka/` | Eureka URL |
-| `SERVER_PORT` | `8085` | Service port |
-
-When running with the Config Server, set `SPRING_CONFIG_IMPORT=configserver:http://localhost:8888`.
+1. Kafka consumers handle **`order.received`** and **`order.status.updated`** (aligned with **order-service** topic names in config).
+2. Rows live in **`order_analytics`**; rollups populate **`branch_daily_summary`**.
+3. Manager and admin APIs read aggregated and live data accordingly.
 
 ---
 
-## Known Limitations / TODOs
+## Configuration
 
-- **Popular items** (`GET /manager/items/popular`) always returns an empty list. `OrderAnalytics` only stores `itemCount` (integer), not per-item breakdown. Item-level data would require a separate `order_item_analytics` table populated from Kafka events that include line items.
-- **`totalCustomers`** in admin analytics is always `0` — unique customer counting requires a dedicated aggregation not available from `BranchDailySummary`.
-- **`tableNumber` / `customerName`** in live orders are always `null` — these fields are not forwarded in Kafka events or stored in `OrderAnalytics`.
-- **Branch names** in `/admin/analytics/branches` use `branchId` as the name — no branch-service client is wired.
+| Variable | Purpose |
+|---|---|
+| `SPRING_DATASOURCE_*` | MySQL |
+| `SPRING_DATA_REDIS_*` | Redis |
+| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | Kafka |
+| `EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE` | Eureka |
+| `SERVER_PORT` | Default **8085** |
+
+Optional: `spring.config.import` → Config Server `http://localhost:8888`.
+
+---
+
+## Known limitations
+
+- **Popular items** may stay empty without per-line-item analytics.
+- **`totalCustomers`** may be **0** at summary level.
+- **Branch display names** in admin breakdowns may equal **`branchId`** until branch-service integration exists.
