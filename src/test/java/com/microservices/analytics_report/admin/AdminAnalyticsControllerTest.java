@@ -45,7 +45,7 @@ class AdminAnalyticsControllerTest {
                 eq(LocalDate.of(2026, 4, 30))))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/admin/analytics")
+        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api")
                         .param("startDate", "2026-04-01")
                         .param("endDate", "2026-04-30"))
                 .andExpect(status().isOk())
@@ -71,7 +71,7 @@ class AdminAnalyticsControllerTest {
         when(analyticsService.getAdminAnalytics(any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/admin/analytics"))
+        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalOrders").value(0));
     }
@@ -95,7 +95,7 @@ class AdminAnalyticsControllerTest {
         when(analyticsService.getAdminAnalytics(any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/admin/analytics"))
+        mockMvc.perform(get("/api/v1/admin/analytics").contextPath("/api"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dailyBreakdown[0].hour").value("09:00"))
                 .andExpect(jsonPath("$.dailyBreakdown[0].revenue").value(500.0))
@@ -126,7 +126,7 @@ class AdminAnalyticsControllerTest {
                 eq(LocalDate.of(2026, 4, 30))))
                 .thenReturn(branchList);
 
-        mockMvc.perform(get("/api/v1/admin/analytics/branches")
+        mockMvc.perform(get("/api/v1/admin/analytics/branches").contextPath("/api")
                         .param("startDate", "2026-04-01")
                         .param("endDate", "2026-04-30"))
                 .andExpect(status().isOk())
@@ -143,7 +143,7 @@ class AdminAnalyticsControllerTest {
         when(analyticsService.getBranchAnalytics(any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/admin/analytics/branches"))
+        mockMvc.perform(get("/api/v1/admin/analytics/branches").contextPath("/api"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
@@ -163,7 +163,7 @@ class AdminAnalyticsControllerTest {
         when(analyticsService.getBranchAnalytics(any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(branchList);
 
-        mockMvc.perform(get("/api/v1/admin/analytics/branches"))
+        mockMvc.perform(get("/api/v1/admin/analytics/branches").contextPath("/api"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))

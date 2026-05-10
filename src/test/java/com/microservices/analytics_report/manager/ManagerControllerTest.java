@@ -44,7 +44,7 @@ class ManagerControllerTest {
         when(analyticsService.getManagerDashboard(eq(BRANCH_ID), any(LocalDate.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/manager/dashboard").param("branchId", BRANCH_ID))
+        mockMvc.perform(get("/api/v1/manager/dashboard").contextPath("/api").param("branchId", BRANCH_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalOrders").value(42))
                 .andExpect(jsonPath("$.totalRevenue").value(1250.50))
@@ -66,14 +66,14 @@ class ManagerControllerTest {
         when(analyticsService.getManagerDashboard(eq(BRANCH_ID), any(LocalDate.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/manager/dashboard").header("X-User-BranchId", BRANCH_ID))
+        mockMvc.perform(get("/api/v1/manager/dashboard").contextPath("/api").header("X-User-BranchId", BRANCH_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalOrders").value(10));
     }
 
     @Test
     void getDashboard_missingBranchId_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/manager/dashboard"))
+        mockMvc.perform(get("/api/v1/manager/dashboard").contextPath("/api"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -96,7 +96,7 @@ class ManagerControllerTest {
 
         when(analyticsService.getManagerLiveOrders(BRANCH_ID)).thenReturn(orders);
 
-        mockMvc.perform(get("/api/v1/manager/orders/live").param("branchId", BRANCH_ID))
+        mockMvc.perform(get("/api/v1/manager/orders/live").contextPath("/api").param("branchId", BRANCH_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value("order-001"))
                 .andExpect(jsonPath("$[0].status").value("PREPARING"))
@@ -106,7 +106,7 @@ class ManagerControllerTest {
 
     @Test
     void getLiveOrders_missingBranchId_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/manager/orders/live"))
+        mockMvc.perform(get("/api/v1/manager/orders/live").contextPath("/api"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -114,7 +114,7 @@ class ManagerControllerTest {
     void getLiveOrders_emptyList_returns200() throws Exception {
         when(analyticsService.getManagerLiveOrders(BRANCH_ID)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/manager/orders/live").param("branchId", BRANCH_ID))
+        mockMvc.perform(get("/api/v1/manager/orders/live").contextPath("/api").param("branchId", BRANCH_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
@@ -134,7 +134,7 @@ class ManagerControllerTest {
         when(analyticsService.getDailySales(eq(BRANCH_ID), eq(LocalDate.of(2026, 5, 10))))
                 .thenReturn(slots);
 
-        mockMvc.perform(get("/api/v1/manager/sales/daily")
+        mockMvc.perform(get("/api/v1/manager/sales/daily").contextPath("/api")
                         .param("branchId", BRANCH_ID)
                         .param("date", "2026-05-10"))
                 .andExpect(status().isOk())
@@ -148,13 +148,13 @@ class ManagerControllerTest {
         when(analyticsService.getDailySales(eq(BRANCH_ID), any(LocalDate.class)))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/manager/sales/daily").param("branchId", BRANCH_ID))
+        mockMvc.perform(get("/api/v1/manager/sales/daily").contextPath("/api").param("branchId", BRANCH_ID))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getDailySales_missingBranchId_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/manager/sales/daily"))
+        mockMvc.perform(get("/api/v1/manager/sales/daily").contextPath("/api"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -165,14 +165,14 @@ class ManagerControllerTest {
         when(analyticsService.getPopularItems(eq(BRANCH_ID), any(LocalDate.class)))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/manager/items/popular").param("branchId", BRANCH_ID))
+        mockMvc.perform(get("/api/v1/manager/items/popular").contextPath("/api").param("branchId", BRANCH_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
 
     @Test
     void getPopularItems_missingBranchId_returns400() throws Exception {
-        mockMvc.perform(get("/api/v1/manager/items/popular"))
+        mockMvc.perform(get("/api/v1/manager/items/popular").contextPath("/api"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -181,7 +181,7 @@ class ManagerControllerTest {
         when(analyticsService.getPopularItems(eq(BRANCH_ID), any(LocalDate.class)))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/manager/items/popular").header("X-User-BranchId", BRANCH_ID))
+        mockMvc.perform(get("/api/v1/manager/items/popular").contextPath("/api").header("X-User-BranchId", BRANCH_ID))
                 .andExpect(status().isOk());
     }
 }
