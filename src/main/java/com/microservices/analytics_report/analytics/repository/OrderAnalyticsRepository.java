@@ -32,4 +32,7 @@ public interface OrderAnalyticsRepository extends JpaRepository<OrderAnalytics, 
     java.math.BigDecimal sumRevenueByBranchAndPeriod(@Param("branchId") String branchId,
                                                       @Param("start") LocalDateTime start,
                                                       @Param("end") LocalDateTime end);
+
+    @Query("SELECT o FROM OrderAnalytics o WHERE o.branchId = :branchId AND o.status IN ('RECEIVED', 'PREPARING', 'READY') ORDER BY o.orderReceivedAt DESC")
+    List<OrderAnalytics> findActivOrdersByBranch(@Param("branchId") String branchId);
 }

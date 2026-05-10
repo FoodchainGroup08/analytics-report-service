@@ -17,4 +17,6 @@ public interface BranchDailySummaryRepository extends JpaRepository<BranchDailyS
             String branchId, LocalDate from, LocalDate to);
 
     List<BranchDailySummary> findBySummaryDateOrderByTotalRevenueDesc(LocalDate summaryDate);
+
+    List<BranchDailySummary> findBySummaryDateBetween(LocalDate startDate, LocalDate endDate);
 }

@@ -19,7 +19,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/reports")
+@RequestMapping("/v1/reports")
 @RequiredArgsConstructor
 @Tag(name = "Reports", description = "Generate and retrieve business reports built from aggregated analytics data. " +
         "Reports capture a snapshot of branch performance over a chosen date range.")

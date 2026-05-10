@@ -20,7 +20,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/analytics")
+@RequestMapping("/v1/analytics")
 @RequiredArgsConstructor
 @Tag(name = "Analytics", description = "Order analytics and branch performance data. " +
         "Aggregates Kafka order events into daily summaries per branch.")

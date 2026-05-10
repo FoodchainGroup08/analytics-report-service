@@ -87,4 +87,64 @@ public class AnalyticsDtos {
         private String orderReceivedAt;
         private String lastUpdatedAt;
     }
+
+    // ── Manager dashboard responses ────────────────────────────────────────────
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class ManagerDashboardResponse {
+        private long totalOrders;
+        private double totalRevenue;
+        private double averageOrderValue;
+        private double ordersChange;
+        private double revenueChange;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class HourlySalesResponse {
+        private String hour;
+        private double revenue;
+        private long orders;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class PopularItemResponse {
+        private String id;
+        private String name;
+        private String category;
+        private long quantitySold;
+        private double revenue;
+        private double trend;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class LiveOrderResponse {
+        private String id;
+        private String status;
+        private String orderType;
+        private String tableNumber;
+        private String customerName;
+        private String createdAt;
+        private double totalAmount;
+        private int itemCount;
+    }
+
+    // ── Admin analytics responses ──────────────────────────────────────────────
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class AdminAnalyticsResponse {
+        private long totalOrders;
+        private double totalRevenue;
+        private double averageOrderValue;
+        private long totalBranches;
+        private long totalCustomers;
+        private List<HourlySalesResponse> dailyBreakdown;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class BranchAnalyticsResponse {
+        private String id;
+        private String name;
+        private long orders;
+        private double revenue;
+    }
 }

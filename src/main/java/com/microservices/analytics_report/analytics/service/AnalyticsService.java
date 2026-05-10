@@ -21,4 +21,20 @@ public interface AnalyticsService {
     Page<AnalyticsDtos.OrderAnalyticsResponse> getBranchOrders(String branchId, int page, int size);
 
     void computeDailySummaries(LocalDate date);
+
+    // ── Manager endpoints ─────────────────────────────────────────────────────
+
+    AnalyticsDtos.ManagerDashboardResponse getManagerDashboard(String branchId, LocalDate date);
+
+    List<AnalyticsDtos.LiveOrderResponse> getManagerLiveOrders(String branchId);
+
+    List<AnalyticsDtos.HourlySalesResponse> getDailySales(String branchId, LocalDate date);
+
+    List<AnalyticsDtos.PopularItemResponse> getPopularItems(String branchId, LocalDate date);
+
+    // ── Admin endpoints ───────────────────────────────────────────────────────
+
+    AnalyticsDtos.AdminAnalyticsResponse getAdminAnalytics(LocalDate startDate, LocalDate endDate);
+
+    List<AnalyticsDtos.BranchAnalyticsResponse> getBranchAnalytics(LocalDate startDate, LocalDate endDate);
 }
