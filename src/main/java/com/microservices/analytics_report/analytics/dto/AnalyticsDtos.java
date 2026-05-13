@@ -131,9 +131,17 @@ public class AnalyticsDtos {
         private String orderType;
         private String tableNumber;
         private String customerName;
-        private String createdAt;
-        private double totalAmount;
+        private String placedAt;
+        private double total;
         private int itemCount;
+        private List<LiveOrderItemDto> items;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class LiveOrderItemDto {
+        private String id;
+        private String name;
+        private int quantity;
     }
 
     // ── Admin analytics responses ──────────────────────────────────────────────

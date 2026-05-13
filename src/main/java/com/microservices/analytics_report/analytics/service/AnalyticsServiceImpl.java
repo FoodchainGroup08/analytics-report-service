@@ -234,9 +234,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         long totalOrders = todaySummary != null ? todaySummary.getTotalOrders() : 0L;
         double totalRevenue = todaySummary != null
-                ? todaySummary.getTotalRevenue().doubleValue() : 0.0;
+                ? todaySummary.getTotalRevenue().multiply(BigDecimal.valueOf(100)).doubleValue() : 0.0;
         double avgOrderValue = todaySummary != null && todaySummary.getAvgOrderValue() != null
-                ? todaySummary.getAvgOrderValue().doubleValue() : 0.0;
+                ? todaySummary.getAvgOrderValue().multiply(BigDecimal.valueOf(100)).doubleValue() : 0.0;
 
         double ordersChange = 0.0;
         double revenueChange = 0.0;
@@ -250,7 +250,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             if (yOrders > 0) {
                 ordersChange = ((double) (totalOrders - yOrders) / yOrders) * 100.0;
             }
-            double yRevenue = yesterdaySummary.getTotalRevenue().doubleValue();
+            double yRevenue = yesterdaySummary.getTotalRevenue().multiply(BigDecimal.valueOf(100)).doubleValue();
             if (yRevenue > 0) {
                 revenueChange = ((totalRevenue - yRevenue) / yRevenue) * 100.0;
             }
@@ -309,11 +309,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
     private String formatPeakHour(int hour) {
-        String start  = (hour == 0 || hour == 12) ? "12" : String.valueOf(hour % 12);
-        int endHour   = hour + 1;
-        String end    = (endHour == 12 || endHour == 24) ? "12" : String.valueOf(endHour % 12);
-        String period = hour < 12 ? "AM" : "PM";
-        return start + "-" + end + " " + period;
+        return String.format("%02d:00", hour);
     }
 
     @Override
@@ -326,11 +322,12 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                         .id(o.getOrderId())
                         .status(o.getStatus())
                         .orderType(o.getOrderType())
-                        .tableNumber(null)    // not stored in OrderAnalytics
-                        .customerName(null)   // not stored in OrderAnalytics (only customerId)
-                        .createdAt(o.getOrderReceivedAt() != null ? o.getOrderReceivedAt().toString() : null)
-                        .totalAmount(o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() : 0.0)
+                        .tableNumber(null)
+                        .customerName(null)
+                        .placedAt(o.getOrderReceivedAt() != null ? o.getOrderReceivedAt().toString() : null)
+                        .total(o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() * 100.0 : 0.0)
                         .itemCount(o.getItemCount() != null ? o.getItemCount() : 0)
+                        .items(List.of())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -355,7 +352,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             List<OrderAnalytics> hourOrders = byHour.getOrDefault(hour, List.of());
             double revenue = hourOrders.stream()
                     .filter(o -> "COMPLETED".equals(o.getStatus()))
-                    .mapToDouble(o -> o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() : 0.0)
+                    .mapToDouble(o -> o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() * 100.0 : 0.0)
                     .sum();
             String label = String.format("%02d:00", hour);
             result.add(AnalyticsDtos.HourlySalesResponse.builder()
@@ -392,7 +389,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             String name       = (String) row[1];
             String category   = (String) row[2];
             long qty          = ((Number) row[3]).longValue();
-            double revenue    = ((Number) row[4]).doubleValue();
+            double revenue    = ((Number) row[4]).doubleValue() * 100.0;
             long yQty         = yesterdayQty.getOrDefault(menuItemId, 0L);
             double trend      = yQty > 0 ? ((double) (qty - yQty) / yQty) * 100.0 : 0.0;
 
@@ -477,8 +474,10 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .completedOrders(s.getCompletedOrders())
                 .cancelledOrders(s.getCancelledOrders())
                 .inProgressOrders(Math.max(inProgress, 0))
-                .totalRevenue(s.getTotalRevenue())
-                .avgOrderValue(s.getAvgOrderValue())
+                .totalRevenue(s.getTotalRevenue() != null
+                        ? s.getTotalRevenue().multiply(BigDecimal.valueOf(100)) : BigDecimal.ZERO)
+                .avgOrderValue(s.getAvgOrderValue() != null
+                        ? s.getAvgOrderValue().multiply(BigDecimal.valueOf(100)) : BigDecimal.ZERO)
                 .dineInCount(s.getDineInCount())
                 .takeawayCount(s.getTakeawayCount())
                 .deliveryCount(s.getDeliveryCount())
