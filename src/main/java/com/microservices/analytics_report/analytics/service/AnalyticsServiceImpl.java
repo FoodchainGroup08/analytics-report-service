@@ -165,11 +165,19 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .map(this::toOrderResponse);
     }
 
-    // ── Daily rollup — runs at midnight every day ─────────────────────────────
+    // ── Daily rollup ──────────────────────────────────────────────────────────
 
-    @Scheduled(cron = "0 0 0 * * *")
+    // Runs every hour — keeps today's BranchDailySummary current for the dashboard
+    @Scheduled(cron = "0 0 * * * *")
+    public void hourlyDailySummary() {
+        log.info("Running hourly summary refresh for {}", LocalDate.now());
+        computeDailySummaries(LocalDate.now());
+    }
+
+    // Runs at 00:05 each night — finalizes yesterday's complete data
+    @Scheduled(cron = "0 5 0 * * *")
     public void scheduledDailySummary() {
-        log.info("Running scheduled daily summary for {}", LocalDate.now().minusDays(1));
+        log.info("Running midnight finalization for {}", LocalDate.now().minusDays(1));
         computeDailySummaries(LocalDate.now().minusDays(1));
     }
 
@@ -265,6 +273,22 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         LocalDateTime dayEnd   = today.atTime(LocalTime.MAX);
         List<OrderAnalytics> orders =
                 orderAnalyticsRepository.findByBranchIdAndOrderReceivedAtBetween(branchId, dayStart, dayEnd);
+
+        // BranchDailySummary is computed at midnight for the previous day, so today's row
+        // won't exist until tomorrow. Fall back to live counts so the dashboard is never zero.
+        if (todaySummary == null && !orders.isEmpty()) {
+            totalOrders = orders.size();
+            BigDecimal liveRevenue = orders.stream()
+                    .filter(o -> !"CANCELLED".equals(o.getStatus()))
+                    .map(OrderAnalytics::getTotalAmount)
+                    .filter(a -> a != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            totalRevenue = liveRevenue.multiply(BigDecimal.valueOf(100)).doubleValue();
+            avgOrderValue = totalOrders > 0
+                    ? liveRevenue.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP)
+                              .multiply(BigDecimal.valueOf(100)).doubleValue()
+                    : 0.0;
+        }
 
         long dineInCount   = orders.stream().filter(o -> "DINE_IN".equalsIgnoreCase(o.getOrderType())).count();
         long takeawayCount = orders.stream().filter(o -> "TAKEAWAY".equalsIgnoreCase(o.getOrderType())).count();
