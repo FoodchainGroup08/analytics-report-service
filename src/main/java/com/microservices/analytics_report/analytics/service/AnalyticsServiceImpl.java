@@ -3,8 +3,10 @@ package com.microservices.analytics_report.analytics.service;
 import com.microservices.analytics_report.analytics.dto.AnalyticsDtos;
 import com.microservices.analytics_report.analytics.model.BranchDailySummary;
 import com.microservices.analytics_report.analytics.model.OrderAnalytics;
+import com.microservices.analytics_report.analytics.model.OrderItemAnalytics;
 import com.microservices.analytics_report.analytics.repository.BranchDailySummaryRepository;
 import com.microservices.analytics_report.analytics.repository.OrderAnalyticsRepository;
+import com.microservices.analytics_report.analytics.repository.OrderItemAnalyticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     private final OrderAnalyticsRepository orderAnalyticsRepository;
     private final BranchDailySummaryRepository branchDailySummaryRepository;
+    private final OrderItemAnalyticsRepository orderItemAnalyticsRepository;
 
     // ── Kafka ingest ──────────────────────────────────────────────────────────
 
@@ -59,6 +62,29 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         orderAnalyticsRepository.save(record);
         log.info("Recorded analytics for order={} branch={}", event.getOrderId(), event.getBranchId());
+
+        if (event.getItems() != null && !event.getItems().isEmpty()) {
+            List<OrderItemAnalytics> itemRecords = event.getItems().stream()
+                    .filter(item -> item.getMenuItemId() != null)
+                    .map(item -> {
+                        BigDecimal unitPrice = item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO;
+                        int qty = item.getQuantity() != null ? item.getQuantity() : 1;
+                        return OrderItemAnalytics.builder()
+                                .orderId(event.getOrderId())
+                                .branchId(event.getBranchId())
+                                .menuItemId(item.getMenuItemId())
+                                .menuItemName(item.getMenuItemName() != null ? item.getMenuItemName() : "Unknown")
+                                .category(item.getCategory())
+                                .quantity(qty)
+                                .unitPrice(unitPrice)
+                                .lineTotal(unitPrice.multiply(BigDecimal.valueOf(qty)))
+                                .orderStatus(record.getStatus())
+                                .orderReceivedAt(record.getOrderReceivedAt())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+            orderItemAnalyticsRepository.saveAll(itemRecords);
+        }
     }
 
     @Override
@@ -70,6 +96,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 record.setCompletedAt(LocalDateTime.now());
             }
             orderAnalyticsRepository.save(record);
+            orderItemAnalyticsRepository.updateStatusByOrderId(event.getOrderId(), event.getNewStatus());
             log.info("Updated analytics for order={} status={}", event.getOrderId(), event.getNewStatus());
         }, () -> log.warn("Order {} not found in analytics — status update skipped", event.getOrderId()));
     }
@@ -293,10 +320,41 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     @Transactional(readOnly = true)
     public List<AnalyticsDtos.PopularItemResponse> getPopularItems(String branchId, LocalDate date) {
-        // OrderAnalytics does not store item-level data (only itemCount aggregate).
-        // TODO: implement once an OrderItem analytics table or item-level Kafka event is available.
-        log.debug("getPopularItems called for branchId={} date={} — no item-level data available", branchId, date);
-        return List.of();
+        LocalDate target = date != null ? date : LocalDate.now();
+        LocalDate yesterday = target.minusDays(1);
+
+        LocalDateTime start  = target.atStartOfDay();
+        LocalDateTime end    = target.atTime(LocalTime.MAX);
+        LocalDateTime yStart = yesterday.atStartOfDay();
+        LocalDateTime yEnd   = yesterday.atTime(LocalTime.MAX);
+
+        List<Object[]> todayRows     = orderItemAnalyticsRepository.findPopularItems(branchId, start, end);
+        List<Object[]> yesterdayRows = orderItemAnalyticsRepository.findPopularItems(branchId, yStart, yEnd);
+
+        Map<String, Long> yesterdayQty = yesterdayRows.stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> ((Number) row[3]).longValue()
+                ));
+
+        return todayRows.stream().map(row -> {
+            String menuItemId = (String) row[0];
+            String name       = (String) row[1];
+            String category   = (String) row[2];
+            long qty          = ((Number) row[3]).longValue();
+            double revenue    = ((Number) row[4]).doubleValue();
+            long yQty         = yesterdayQty.getOrDefault(menuItemId, 0L);
+            double trend      = yQty > 0 ? ((double) (qty - yQty) / yQty) * 100.0 : 0.0;
+
+            return AnalyticsDtos.PopularItemResponse.builder()
+                    .id(menuItemId)
+                    .name(name)
+                    .category(category)
+                    .quantitySold(qty)
+                    .revenue(revenue)
+                    .trend(trend)
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     // ── Admin endpoints ───────────────────────────────────────────────────────

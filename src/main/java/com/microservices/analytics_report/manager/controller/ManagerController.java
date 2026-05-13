@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
+
 @Slf4j
 @RestController
 @RequestMapping("/v1/manager")
@@ -26,15 +28,15 @@ public class ManagerController {
     @GetMapping("/dashboard")
     @Operation(
             summary = "Manager dashboard summary",
-            description = "Returns today's key metrics for the manager's branch: total orders, revenue, and trends vs yesterday.",
+            description = "Returns key metrics for the manager's branch. Defaults to today; pass ?date= to query a past date.",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<AnalyticsDtos.ManagerDashboardResponse> getDashboard(
-            @RequestHeader(value = "X-User-BranchId", required = false) String branchIdHeader,
-            @RequestParam(required = false) String branchId) {
-        String bid = branchId != null ? branchId : branchIdHeader;
-        if (bid == null) return ResponseEntity.badRequest().build();
-        log.info("GET /manager/dashboard branchId={}", bid);
-        return ResponseEntity.ok(analyticsService.getManagerDashboard(bid, LocalDate.now()));
+            @RequestHeader(value = "X-User-BranchId", required = false) String branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DATE) LocalDate date) {
+        if (branchId == null) return ResponseEntity.badRequest().build();
+        LocalDate target = date != null ? date : LocalDate.now();
+        log.info("GET /manager/dashboard branchId={} date={}", branchId, target);
+        return ResponseEntity.ok(analyticsService.getManagerDashboard(branchId, target));
     }
 
     @GetMapping("/orders/live")
@@ -43,12 +45,10 @@ public class ManagerController {
             description = "Returns all currently active orders at the manager's branch.",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<List<AnalyticsDtos.LiveOrderResponse>> getLiveOrders(
-            @RequestHeader(value = "X-User-BranchId", required = false) String branchIdHeader,
-            @RequestParam(required = false) String branchId) {
-        String bid = branchId != null ? branchId : branchIdHeader;
-        if (bid == null) return ResponseEntity.badRequest().build();
-        log.info("GET /manager/orders/live branchId={}", bid);
-        return ResponseEntity.ok(analyticsService.getManagerLiveOrders(bid));
+            @RequestHeader(value = "X-User-BranchId", required = false) String branchId) {
+        if (branchId == null) return ResponseEntity.badRequest().build();
+        log.info("GET /manager/orders/live branchId={}", branchId);
+        return ResponseEntity.ok(analyticsService.getManagerLiveOrders(branchId));
     }
 
     @GetMapping("/sales/daily")
@@ -57,27 +57,41 @@ public class ManagerController {
             description = "Returns hourly revenue and order counts for the specified date (defaults to today).",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<List<AnalyticsDtos.HourlySalesResponse>> getDailySales(
-            @RequestHeader(value = "X-User-BranchId", required = false) String branchIdHeader,
-            @RequestParam(required = false) String branchId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        String bid = branchId != null ? branchId : branchIdHeader;
-        if (bid == null) return ResponseEntity.badRequest().build();
-        LocalDate targetDate = date != null ? date : LocalDate.now();
-        log.info("GET /manager/sales/daily branchId={} date={}", bid, targetDate);
-        return ResponseEntity.ok(analyticsService.getDailySales(bid, targetDate));
+            @RequestHeader(value = "X-User-BranchId", required = false) String branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DATE) LocalDate date) {
+        if (branchId == null) return ResponseEntity.badRequest().build();
+        LocalDate target = date != null ? date : LocalDate.now();
+        log.info("GET /manager/sales/daily branchId={} date={}", branchId, target);
+        return ResponseEntity.ok(analyticsService.getDailySales(branchId, target));
     }
 
     @GetMapping("/items/popular")
     @Operation(
             summary = "Popular menu items",
-            description = "Returns the top-selling menu items for the manager's branch today.",
+            description = "Returns top-selling menu items for the manager's branch. Defaults to today; pass ?date= for a past date.",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<List<AnalyticsDtos.PopularItemResponse>> getPopularItems(
-            @RequestHeader(value = "X-User-BranchId", required = false) String branchIdHeader,
-            @RequestParam(required = false) String branchId) {
-        String bid = branchId != null ? branchId : branchIdHeader;
-        if (bid == null) return ResponseEntity.badRequest().build();
-        log.info("GET /manager/items/popular branchId={}", bid);
-        return ResponseEntity.ok(analyticsService.getPopularItems(bid, LocalDate.now()));
+            @RequestHeader(value = "X-User-BranchId", required = false) String branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DATE) LocalDate date) {
+        if (branchId == null) return ResponseEntity.badRequest().build();
+        LocalDate target = date != null ? date : LocalDate.now();
+        log.info("GET /manager/items/popular branchId={} date={}", branchId, target);
+        return ResponseEntity.ok(analyticsService.getPopularItems(branchId, target));
+    }
+
+    @GetMapping("/summary/history")
+    @Operation(
+            summary = "Historical daily summaries",
+            description = "Returns per-day order and revenue summaries for the manager's branch over a date range. Defaults to the last 30 days.",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
+    public ResponseEntity<List<AnalyticsDtos.BranchSummaryResponse>> getHistory(
+            @RequestHeader(value = "X-User-BranchId", required = false) String branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DATE) LocalDate to) {
+        if (branchId == null) return ResponseEntity.badRequest().build();
+        LocalDate toDate   = to   != null ? to   : LocalDate.now();
+        LocalDate fromDate = from != null ? from : toDate.minusDays(30);
+        log.info("GET /manager/summary/history branchId={} from={} to={}", branchId, fromDate, toDate);
+        return ResponseEntity.ok(analyticsService.getBranchSummaries(branchId, fromDate, toDate));
     }
 }

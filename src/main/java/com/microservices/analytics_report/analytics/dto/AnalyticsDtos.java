@@ -43,6 +43,7 @@ public class AnalyticsDtos {
     public static class OrderItemEvent {
         private String menuItemId;
         private String menuItemName;
+        private String category;
         private Integer quantity;
         private BigDecimal unitPrice;
     }
