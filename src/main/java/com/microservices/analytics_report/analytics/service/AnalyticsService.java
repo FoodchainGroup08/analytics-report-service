@@ -37,4 +37,16 @@ public interface AnalyticsService {
     AnalyticsDtos.AdminAnalyticsResponse getAdminAnalytics(LocalDate startDate, LocalDate endDate);
 
     List<AnalyticsDtos.BranchAnalyticsResponse> getBranchAnalytics(LocalDate startDate, LocalDate endDate);
+
+    // ── Enriched Head Office Admin endpoints ──────────────────────────────────
+
+    AnalyticsDtos.OverviewResponse getOverview(LocalDate startDate, LocalDate endDate);
+
+    List<AnalyticsDtos.BranchComparisonResponse> getBranchComparison(LocalDate startDate, LocalDate endDate);
+
+    AnalyticsDtos.TrendsResponse getTrends(String branchId, LocalDate startDate, LocalDate endDate, String interval);
+
+    AnalyticsDtos.OperationalAnalyticsResponse getOperationalAnalytics(String branchId, LocalDate startDate, LocalDate endDate);
+
+    List<AnalyticsDtos.PopularItemResponse> getPopularItemsForPeriod(String branchId, LocalDate startDate, LocalDate endDate, int limit);
 }

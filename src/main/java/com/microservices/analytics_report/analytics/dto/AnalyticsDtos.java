@@ -155,4 +155,68 @@ public class AnalyticsDtos {
         private long orders;
         private double revenue;
     }
+
+    // ── Enriched Head Office Admin responses ──────────────────────────────────
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class OverviewResponse {
+        private LocalDate startDate;
+        private LocalDate endDate;
+        private long totalOrders;
+        private BigDecimal totalRevenue;
+        private BigDecimal avgOrderValue;
+        private double completionRate;
+        private double cancellationRate;
+        private double revenueGrowthPercent;
+        private double ordersGrowthPercent;
+        private String topPerformingBranch;
+        private String fastestBranch;
+        private String slowestBranch;
+        private long totalBranches;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class BranchComparisonResponse {
+        private String branchId;
+        private long totalOrders;
+        private BigDecimal totalRevenue;
+        private BigDecimal avgOrderValue;
+        private double completionRate;
+        private double cancellationRate;
+        private Double avgPreparationTimeMinutes;
+        private List<PopularItemResponse> topItems;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class TrendDataPoint {
+        private String period;
+        private BigDecimal revenue;
+        private long orders;
+        private Double avgPreparationTimeMinutes;
+        private Double completionRate;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class TrendsResponse {
+        private LocalDate startDate;
+        private LocalDate endDate;
+        private String interval;
+        private String branchId;
+        private List<TrendDataPoint> dataPoints;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class OrdersByStatusEntry {
+        private String status;
+        private long count;
+        private double percentage;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class OperationalAnalyticsResponse {
+        private List<OrdersByStatusEntry> ordersByStatus;
+        private List<HourlySalesResponse> ordersByHour;
+        private String peakHour;
+        private long totalOrders;
+    }
 }
