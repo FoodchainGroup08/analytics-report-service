@@ -63,4 +63,12 @@ public class BranchDailySummary {
     @Column(name = "delivery_count", nullable = false)
     @Builder.Default
     private Integer deliveryCount = 0;
+
+    /** Average seconds from orderReceivedAt → completedAt for COMPLETED orders on this day. */
+    @Column(name = "avg_preparation_time_seconds")
+    private Long avgPreparationTimeSeconds;
+
+    /** Completed orders / total orders * 100, stored for fast cross-branch comparison queries. */
+    @Column(name = "completion_rate", precision = 5, scale = 2)
+    private java.math.BigDecimal completionRate;
 }

@@ -47,7 +47,7 @@ public class AnalyticsDtos {
         private BigDecimal unitPrice;
     }
 
-    // ── API responses ─────────────────────────────────────────────────────────
+    // ── Core API responses (backward-compatible) ──────────────────────────────
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
     public static class BranchSummaryResponse {
@@ -62,6 +62,9 @@ public class AnalyticsDtos {
         private Integer dineInCount;
         private Integer takeawayCount;
         private Integer deliveryCount;
+        /** Seconds; null when no completed orders on this day. */
+        private Long avgPreparationTimeSeconds;
+        private BigDecimal completionRate;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -88,7 +91,7 @@ public class AnalyticsDtos {
         private String lastUpdatedAt;
     }
 
-    // ── Manager dashboard responses ────────────────────────────────────────────
+    // ── Manager dashboard responses ───────────────────────────────────────────
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
     public static class ManagerDashboardResponse {
@@ -97,6 +100,8 @@ public class AnalyticsDtos {
         private double averageOrderValue;
         private double ordersChange;
         private double revenueChange;
+        /** Average preparation time in minutes for today. */
+        private double avgPreparationTimeMinutes;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -110,10 +115,8 @@ public class AnalyticsDtos {
     public static class PopularItemResponse {
         private String id;
         private String name;
-        private String category;
         private long quantitySold;
         private double revenue;
-        private double trend;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -128,7 +131,7 @@ public class AnalyticsDtos {
         private int itemCount;
     }
 
-    // ── Admin analytics responses ──────────────────────────────────────────────
+    // ── Admin analytics responses (enriched) ─────────────────────────────────
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
     public static class AdminAnalyticsResponse {
@@ -137,6 +140,15 @@ public class AnalyticsDtos {
         private double averageOrderValue;
         private long totalBranches;
         private long totalCustomers;
+        private double completionRate;
+        private double cancellationRate;
+        /** Revenue growth % vs the equivalent prior period. */
+        private double revenueGrowthPercent;
+        /** Orders growth % vs the equivalent prior period. */
+        private double ordersGrowthPercent;
+        private String topPerformingBranch;
+        private String fastestBranch;
+        private String slowestBranch;
         private List<HourlySalesResponse> dailyBreakdown;
     }
 
@@ -146,5 +158,82 @@ public class AnalyticsDtos {
         private String name;
         private long orders;
         private double revenue;
+        private double avgOrderValue;
+        private double completionRate;
+        private double cancellationRate;
+        /** Average preparation time in minutes; null when no completed orders. */
+        private Double avgPreparationTimeMinutes;
+        private List<PopularItemResponse> topItems;
+    }
+
+    // ── Overview response ─────────────────────────────────────────────────────
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class OverviewResponse {
+        private LocalDate startDate;
+        private LocalDate endDate;
+        private long totalOrders;
+        private BigDecimal totalRevenue;
+        private BigDecimal avgOrderValue;
+        private double completionRate;
+        private double cancellationRate;
+        private double revenueGrowthPercent;
+        private double ordersGrowthPercent;
+        private String topPerformingBranch;
+        private String fastestBranch;
+        private String slowestBranch;
+        private long totalBranches;
+    }
+
+    // ── Branch comparison response ────────────────────────────────────────────
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class BranchComparisonResponse {
+        private String branchId;
+        private long totalOrders;
+        private BigDecimal totalRevenue;
+        private BigDecimal avgOrderValue;
+        private double completionRate;
+        private double cancellationRate;
+        private Double avgPreparationTimeMinutes;
+        private List<PopularItemResponse> topItems;
+    }
+
+    // ── Trends response ───────────────────────────────────────────────────────
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class TrendDataPoint {
+        /** e.g. "2024-01-15" (DAY), "2024-W03" (WEEK), "2024-01" (MONTH). */
+        private String period;
+        private BigDecimal revenue;
+        private long orders;
+        private Double avgPreparationTimeMinutes;
+        private Double completionRate;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class TrendsResponse {
+        private LocalDate startDate;
+        private LocalDate endDate;
+        private String interval;
+        private String branchId;
+        private List<TrendDataPoint> dataPoints;
+    }
+
+    // ── Operational analytics response ────────────────────────────────────────
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class OrdersByStatusEntry {
+        private String status;
+        private long count;
+        private double percentage;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class OperationalAnalyticsResponse {
+        private List<OrdersByStatusEntry> ordersByStatus;
+        private List<HourlySalesResponse> ordersByHour;
+        private String peakHour;
+        private long totalOrders;
     }
 }

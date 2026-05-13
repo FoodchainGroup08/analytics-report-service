@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -38,6 +39,7 @@ public class AnalyticsController {
             @ApiResponse(responseCode = "200", description = "Dashboard data returned")
     })
     @GetMapping("/dashboard")
+    @PreAuthorize("hasAnyRole('HEAD_OFFICE_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<AnalyticsDtos.DashboardResponse> getDashboard(
             @Parameter(description = "Date to query (yyyy-MM-dd). Defaults to today.")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -55,6 +57,7 @@ public class AnalyticsController {
             @ApiResponse(responseCode = "404", description = "No summary available for this branch on this date")
     })
     @GetMapping("/branch/{branchId}/summary")
+    @PreAuthorize("hasAnyRole('HEAD_OFFICE_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<AnalyticsDtos.BranchSummaryResponse> getBranchSummary(
             @Parameter(description = "Branch UUID", required = true) @PathVariable String branchId,
             @Parameter(description = "Date to query (yyyy-MM-dd). Defaults to today.")
@@ -72,6 +75,7 @@ public class AnalyticsController {
             @ApiResponse(responseCode = "200", description = "List of daily summaries")
     })
     @GetMapping("/branch/{branchId}/summaries")
+    @PreAuthorize("hasAnyRole('HEAD_OFFICE_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<List<AnalyticsDtos.BranchSummaryResponse>> getBranchSummaries(
             @Parameter(description = "Branch UUID", required = true) @PathVariable String branchId,
             @Parameter(description = "Start date (yyyy-MM-dd)", required = true)
@@ -91,6 +95,7 @@ public class AnalyticsController {
             @ApiResponse(responseCode = "200", description = "Paginated order analytics records")
     })
     @GetMapping("/branch/{branchId}/orders")
+    @PreAuthorize("hasAnyRole('HEAD_OFFICE_ADMIN', 'BRANCH_MANAGER')")
     public ResponseEntity<Page<AnalyticsDtos.OrderAnalyticsResponse>> getBranchOrders(
             @Parameter(description = "Branch UUID", required = true) @PathVariable String branchId,
             @RequestParam(defaultValue = "0") int page,
@@ -108,6 +113,7 @@ public class AnalyticsController {
             @ApiResponse(responseCode = "200", description = "Rollup triggered")
     })
     @PostMapping("/rollup")
+    @PreAuthorize("hasRole('HEAD_OFFICE_ADMIN')")
     public ResponseEntity<String> triggerRollup(
             @Parameter(description = "Date to recompute (yyyy-MM-dd). Defaults to yesterday.")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
