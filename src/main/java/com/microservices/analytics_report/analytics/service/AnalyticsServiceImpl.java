@@ -256,6 +256,41 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             }
         }
 
+        // ── Live fields computed from raw OrderAnalytics ──────────────────────
+        LocalDateTime dayStart = today.atStartOfDay();
+        LocalDateTime dayEnd   = today.atTime(LocalTime.MAX);
+        List<OrderAnalytics> orders =
+                orderAnalyticsRepository.findByBranchIdAndOrderReceivedAtBetween(branchId, dayStart, dayEnd);
+
+        long dineInCount   = orders.stream().filter(o -> "DINE_IN".equalsIgnoreCase(o.getOrderType())).count();
+        long takeawayCount = orders.stream().filter(o -> "TAKEAWAY".equalsIgnoreCase(o.getOrderType())).count();
+        long deliveryCount = orders.stream().filter(o -> "DELIVERY".equalsIgnoreCase(o.getOrderType())).count();
+
+        long completedCount = orders.stream().filter(o -> "COMPLETED".equals(o.getStatus())).count();
+        double completionRate = orders.isEmpty() ? 0.0
+                : Math.round((completedCount * 100.0 / orders.size()) * 10.0) / 10.0;
+
+        double averagePrepTime = orders.stream()
+                .filter(o -> "COMPLETED".equals(o.getStatus())
+                        && o.getCompletedAt() != null
+                        && o.getOrderReceivedAt() != null)
+                .mapToLong(o -> java.time.Duration.between(o.getOrderReceivedAt(), o.getCompletedAt()).toMinutes())
+                .filter(m -> m >= 0)
+                .average()
+                .orElse(0.0);
+
+        Map<Integer, Long> ordersByHour = orders.stream()
+                .collect(Collectors.groupingBy(
+                        o -> o.getOrderReceivedAt().getHour(),
+                        Collectors.counting()
+                ));
+        int peakHourRaw = ordersByHour.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(-1);
+        String peakHour      = peakHourRaw >= 0 ? formatPeakHour(peakHourRaw) : null;
+        long peakHourOrders  = peakHourRaw >= 0 ? ordersByHour.get(peakHourRaw) : 0L;
+
         log.debug("Manager dashboard branchId={} date={} orders={} revenue={}", branchId, today, totalOrders, totalRevenue);
         return AnalyticsDtos.ManagerDashboardResponse.builder()
                 .totalOrders(totalOrders)
@@ -263,7 +298,22 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .averageOrderValue(avgOrderValue)
                 .ordersChange(ordersChange)
                 .revenueChange(revenueChange)
+                .averagePrepTime(Math.round(averagePrepTime * 10.0) / 10.0)
+                .peakHour(peakHour)
+                .peakHourOrders(peakHourOrders)
+                .completionRate(completionRate)
+                .dineInCount(dineInCount)
+                .takeawayCount(takeawayCount)
+                .deliveryCount(deliveryCount)
                 .build();
+    }
+
+    private String formatPeakHour(int hour) {
+        String start  = (hour == 0 || hour == 12) ? "12" : String.valueOf(hour % 12);
+        int endHour   = hour + 1;
+        String end    = (endHour == 12 || endHour == 24) ? "12" : String.valueOf(endHour % 12);
+        String period = hour < 12 ? "AM" : "PM";
+        return start + "-" + end + " " + period;
     }
 
     @Override

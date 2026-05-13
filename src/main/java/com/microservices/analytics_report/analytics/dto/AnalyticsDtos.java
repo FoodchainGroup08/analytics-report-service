@@ -98,6 +98,13 @@ public class AnalyticsDtos {
         private double averageOrderValue;
         private double ordersChange;
         private double revenueChange;
+        private double averagePrepTime;
+        private String peakHour;
+        private long peakHourOrders;
+        private double completionRate;
+        private long dineInCount;
+        private long takeawayCount;
+        private long deliveryCount;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
