@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,7 +24,10 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.IsoFields;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -461,6 +465,302 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    // ── Enriched Head Office Admin methods ────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public AnalyticsDtos.OverviewResponse getOverview(LocalDate startDate, LocalDate endDate) {
+        LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
+        LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
+
+        List<BranchDailySummary> summaries = branchDailySummaryRepository.findBySummaryDateBetween(start, end);
+
+        long totalOrders     = summaries.stream().mapToLong(BranchDailySummary::getTotalOrders).sum();
+        long completedOrders = summaries.stream().mapToLong(BranchDailySummary::getCompletedOrders).sum();
+        long cancelledOrders = summaries.stream().mapToLong(BranchDailySummary::getCancelledOrders).sum();
+        BigDecimal totalRevenue = summaries.stream()
+                .map(BranchDailySummary::getTotalRevenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal avgOrderValue = totalOrders > 0
+                ? totalRevenue.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        double completionRate   = totalOrders > 0 ? round((completedOrders * 100.0) / totalOrders) : 0.0;
+        double cancellationRate = totalOrders > 0 ? round((cancelledOrders * 100.0) / totalOrders) : 0.0;
+
+        // ── Growth vs equivalent prior period ─────────────────────────────────
+        long periodDays = java.time.temporal.ChronoUnit.DAYS.between(start, end) + 1;
+        LocalDate priorEnd   = start.minusDays(1);
+        LocalDate priorStart = priorEnd.minusDays(periodDays - 1);
+
+        List<BranchDailySummary> priorSummaries = branchDailySummaryRepository
+                .findBySummaryDateBetween(priorStart, priorEnd);
+        long priorOrders  = priorSummaries.stream().mapToLong(BranchDailySummary::getTotalOrders).sum();
+        double priorRevenue = priorSummaries.stream()
+                .mapToDouble(s -> s.getTotalRevenue().doubleValue()).sum();
+
+        double revenueGrowth = priorRevenue > 0
+                ? round(((totalRevenue.doubleValue() - priorRevenue) / priorRevenue) * 100.0) : 0.0;
+        double ordersGrowth  = priorOrders > 0
+                ? round(((double) (totalOrders - priorOrders) / priorOrders) * 100.0) : 0.0;
+
+        // ── Branch highlights from OrderAnalytics ─────────────────────────────
+        Map<String, List<BranchDailySummary>> byBranch = summaries.stream()
+                .collect(Collectors.groupingBy(BranchDailySummary::getBranchId));
+        long totalBranches = byBranch.size();
+
+        String topBranch = byBranch.entrySet().stream()
+                .max(Comparator.comparingDouble(e -> e.getValue().stream()
+                        .mapToDouble(s -> s.getTotalRevenue().doubleValue()).sum()))
+                .map(Map.Entry::getKey).orElse(null);
+
+        // Fastest = shortest avg prep time; Slowest = longest
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd   = end.atTime(LocalTime.MAX);
+        List<OrderAnalytics> allOrders = orderAnalyticsRepository.findByOrderReceivedAtBetween(rangeStart, rangeEnd);
+
+        Map<String, Double> prepTimeByBranch = allOrders.stream()
+                .filter(o -> "COMPLETED".equals(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
+                .collect(Collectors.groupingBy(
+                        OrderAnalytics::getBranchId,
+                        Collectors.averagingDouble(o ->
+                                Math.max(0, java.time.Duration.between(o.getOrderReceivedAt(), o.getCompletedAt()).toMinutes()))
+                ));
+
+        String fastestBranch = prepTimeByBranch.entrySet().stream()
+                .min(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey).orElse(null);
+        String slowestBranch = prepTimeByBranch.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey).orElse(null);
+
+        return AnalyticsDtos.OverviewResponse.builder()
+                .startDate(start)
+                .endDate(end)
+                .totalOrders(totalOrders)
+                .totalRevenue(totalRevenue)
+                .avgOrderValue(avgOrderValue)
+                .completionRate(completionRate)
+                .cancellationRate(cancellationRate)
+                .revenueGrowthPercent(revenueGrowth)
+                .ordersGrowthPercent(ordersGrowth)
+                .topPerformingBranch(topBranch)
+                .fastestBranch(fastestBranch)
+                .slowestBranch(slowestBranch)
+                .totalBranches(totalBranches)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AnalyticsDtos.BranchComparisonResponse> getBranchComparison(LocalDate startDate, LocalDate endDate) {
+        LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
+        LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
+
+        List<BranchDailySummary> summaries = branchDailySummaryRepository.findBySummaryDateBetween(start, end);
+        Map<String, List<BranchDailySummary>> byBranch = summaries.stream()
+                .collect(Collectors.groupingBy(BranchDailySummary::getBranchId));
+
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd   = end.atTime(LocalTime.MAX);
+        List<OrderAnalytics> allOrders = orderAnalyticsRepository.findByOrderReceivedAtBetween(rangeStart, rangeEnd);
+        Map<String, List<OrderAnalytics>> ordersByBranch = allOrders.stream()
+                .collect(Collectors.groupingBy(OrderAnalytics::getBranchId));
+
+        Pageable top5 = PageRequest.of(0, 5);
+
+        return byBranch.entrySet().stream()
+                .map(e -> {
+                    String bid = e.getKey();
+                    List<BranchDailySummary> bs = e.getValue();
+                    long totalOrders = bs.stream().mapToLong(BranchDailySummary::getTotalOrders).sum();
+                    long completed   = bs.stream().mapToLong(BranchDailySummary::getCompletedOrders).sum();
+                    long cancelled   = bs.stream().mapToLong(BranchDailySummary::getCancelledOrders).sum();
+                    BigDecimal revenue = bs.stream().map(BranchDailySummary::getTotalRevenue)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal avgOV = totalOrders > 0
+                            ? revenue.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP)
+                            : BigDecimal.ZERO;
+                    double completionRate   = totalOrders > 0 ? round((completed * 100.0) / totalOrders) : 0.0;
+                    double cancellationRate = totalOrders > 0 ? round((cancelled * 100.0) / totalOrders) : 0.0;
+
+                    Double avgPrep = ordersByBranch.getOrDefault(bid, List.of()).stream()
+                            .filter(o -> "COMPLETED".equals(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
+                            .mapToLong(o -> Math.max(0, java.time.Duration.between(o.getOrderReceivedAt(), o.getCompletedAt()).toMinutes()))
+                            .average().isPresent()
+                            ? ordersByBranch.getOrDefault(bid, List.of()).stream()
+                                    .filter(o -> "COMPLETED".equals(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
+                                    .mapToLong(o -> Math.max(0, java.time.Duration.between(o.getOrderReceivedAt(), o.getCompletedAt()).toMinutes()))
+                                    .average().getAsDouble()
+                            : null;
+
+                    List<Object[]> topItemRows = orderItemAnalyticsRepository
+                            .findPopularItemsByBranchPeriod(bid, rangeStart, rangeEnd, top5);
+                    List<AnalyticsDtos.PopularItemResponse> topItems = topItemRows.stream()
+                            .map(row -> AnalyticsDtos.PopularItemResponse.builder()
+                                    .id((String) row[0])
+                                    .name((String) row[1])
+                                    .category(row[2] != null ? (String) row[2] : "")
+                                    .quantitySold(((Number) row[3]).longValue())
+                                    .revenue(((Number) row[4]).doubleValue())
+                                    .trend(0.0)
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    return AnalyticsDtos.BranchComparisonResponse.builder()
+                            .branchId(bid)
+                            .totalOrders(totalOrders)
+                            .totalRevenue(revenue)
+                            .avgOrderValue(avgOV)
+                            .completionRate(completionRate)
+                            .cancellationRate(cancellationRate)
+                            .avgPreparationTimeMinutes(avgPrep != null ? round(avgPrep) : null)
+                            .topItems(topItems)
+                            .build();
+                })
+                .sorted(Comparator.comparingDouble((AnalyticsDtos.BranchComparisonResponse r) ->
+                        r.getTotalRevenue().doubleValue()).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AnalyticsDtos.TrendsResponse getTrends(String branchId, LocalDate startDate, LocalDate endDate, String interval) {
+        LocalDate start    = startDate != null ? startDate : LocalDate.now().minusDays(30);
+        LocalDate end      = endDate   != null ? endDate   : LocalDate.now();
+        String resolvedInterval = interval != null ? interval.toUpperCase() : "DAY";
+
+        List<BranchDailySummary> summaries = branchId != null && !branchId.isBlank()
+                ? branchDailySummaryRepository.findByBranchIdAndSummaryDateBetweenOrderBySummaryDateAsc(branchId, start, end)
+                : branchDailySummaryRepository.findBySummaryDateBetween(start, end);
+
+        // Group by period key
+        Map<String, List<BranchDailySummary>> grouped = summaries.stream()
+                .collect(Collectors.groupingBy(s -> periodKey(s.getSummaryDate(), resolvedInterval),
+                        LinkedHashMap::new, Collectors.toList()));
+
+        List<AnalyticsDtos.TrendDataPoint> dataPoints = grouped.entrySet().stream()
+                .map(e -> {
+                    List<BranchDailySummary> pts = e.getValue();
+                    long orders      = pts.stream().mapToLong(BranchDailySummary::getTotalOrders).sum();
+                    long completed   = pts.stream().mapToLong(BranchDailySummary::getCompletedOrders).sum();
+                    BigDecimal rev   = pts.stream().map(BranchDailySummary::getTotalRevenue)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    double compRate  = orders > 0 ? round((completed * 100.0) / orders) : 0.0;
+                    return AnalyticsDtos.TrendDataPoint.builder()
+                            .period(e.getKey())
+                            .revenue(rev)
+                            .orders(orders)
+                            .avgPreparationTimeMinutes(null)
+                            .completionRate(compRate)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return AnalyticsDtos.TrendsResponse.builder()
+                .startDate(start)
+                .endDate(end)
+                .interval(resolvedInterval)
+                .branchId(branchId)
+                .dataPoints(dataPoints)
+                .build();
+    }
+
+    private String periodKey(LocalDate date, String interval) {
+        return switch (interval) {
+            case "WEEK"  -> date.getYear() + "-W" + String.format("%02d", date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR));
+            case "MONTH" -> date.getYear() + "-" + String.format("%02d", date.getMonthValue());
+            default      -> date.toString(); // DAY
+        };
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AnalyticsDtos.OperationalAnalyticsResponse getOperationalAnalytics(String branchId, LocalDate startDate, LocalDate endDate) {
+        LocalDate start = startDate != null ? startDate : LocalDate.now();
+        LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
+
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd   = end.atTime(LocalTime.MAX);
+
+        List<OrderAnalytics> orders = branchId != null && !branchId.isBlank()
+                ? orderAnalyticsRepository.findByBranchIdAndOrderReceivedAtBetween(branchId, rangeStart, rangeEnd)
+                : orderAnalyticsRepository.findByOrderReceivedAtBetween(rangeStart, rangeEnd);
+
+        long totalOrders = orders.size();
+
+        // ── Orders by status ──────────────────────────────────────────────────
+        Map<String, Long> statusCounts = orders.stream()
+                .collect(Collectors.groupingBy(OrderAnalytics::getStatus, Collectors.counting()));
+        List<AnalyticsDtos.OrdersByStatusEntry> ordersByStatus = statusCounts.entrySet().stream()
+                .map(e -> AnalyticsDtos.OrdersByStatusEntry.builder()
+                        .status(e.getKey())
+                        .count(e.getValue())
+                        .percentage(totalOrders > 0 ? round((e.getValue() * 100.0) / totalOrders) : 0.0)
+                        .build())
+                .sorted(Comparator.comparingLong(AnalyticsDtos.OrdersByStatusEntry::getCount).reversed())
+                .collect(Collectors.toList());
+
+        // ── Orders by hour ────────────────────────────────────────────────────
+        Map<Integer, List<OrderAnalytics>> byHour = orders.stream()
+                .collect(Collectors.groupingBy(o -> o.getOrderReceivedAt().getHour()));
+        List<AnalyticsDtos.HourlySalesResponse> ordersByHour = new ArrayList<>();
+        for (int h = 0; h <= 23; h++) {
+            List<OrderAnalytics> hourOrders = byHour.getOrDefault(h, List.of());
+            if (hourOrders.isEmpty()) continue;
+            double revenue = hourOrders.stream()
+                    .filter(o -> "COMPLETED".equals(o.getStatus()))
+                    .mapToDouble(o -> o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() : 0.0)
+                    .sum();
+            ordersByHour.add(AnalyticsDtos.HourlySalesResponse.builder()
+                    .hour(String.format("%02d:00", h))
+                    .revenue(revenue)
+                    .orders(hourOrders.size())
+                    .build());
+        }
+
+        int peakHourRaw = byHour.entrySet().stream()
+                .max(Comparator.comparingInt(e -> e.getValue().size()))
+                .map(Map.Entry::getKey).orElse(-1);
+        String peakHour = peakHourRaw >= 0 ? formatPeakHour(peakHourRaw) : null;
+
+        return AnalyticsDtos.OperationalAnalyticsResponse.builder()
+                .ordersByStatus(ordersByStatus)
+                .ordersByHour(ordersByHour)
+                .peakHour(peakHour)
+                .totalOrders(totalOrders)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AnalyticsDtos.PopularItemResponse> getPopularItemsForPeriod(String branchId, LocalDate startDate, LocalDate endDate, int limit) {
+        LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
+        LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
+        LocalDateTime rangeStart = start.atStartOfDay();
+        LocalDateTime rangeEnd   = end.atTime(LocalTime.MAX);
+
+        Pageable pageable = PageRequest.of(0, limit > 0 ? limit : 10);
+        List<Object[]> rows = branchId != null && !branchId.isBlank()
+                ? orderItemAnalyticsRepository.findPopularItemsByBranchPeriod(branchId, rangeStart, rangeEnd, pageable)
+                : orderItemAnalyticsRepository.findPopularItemsGlobal(rangeStart, rangeEnd, pageable);
+
+        return rows.stream()
+                .map(row -> AnalyticsDtos.PopularItemResponse.builder()
+                        .id((String) row[0])
+                        .name((String) row[1])
+                        .category(row[2] != null ? (String) row[2] : "")
+                        .quantitySold(((Number) row[3]).longValue())
+                        .revenue(((Number) row[4]).doubleValue())
+                        .trend(0.0)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private double round(double v) {
+        return Math.round(v * 10.0) / 10.0;
     }
 
     // ── Mappers ───────────────────────────────────────────────────────────────
