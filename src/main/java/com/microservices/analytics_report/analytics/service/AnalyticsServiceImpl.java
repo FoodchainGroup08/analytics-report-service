@@ -96,7 +96,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     public void updateOrderStatus(AnalyticsDtos.OrderStatusUpdatedEvent event) {
         orderAnalyticsRepository.findByOrderId(event.getOrderId()).ifPresentOrElse(record -> {
             record.setStatus(event.getNewStatus());
-            if ("COMPLETED".equals(event.getNewStatus())) {
+            if (isCompletedStatus(event.getNewStatus())) {
                 record.setCompletedAt(LocalDateTime.now());
             }
             orderAnalyticsRepository.save(record);
@@ -198,14 +198,14 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         byBranch.forEach((branchId, branchOrders) -> {
             int total     = branchOrders.size();
-            int completed = (int) branchOrders.stream().filter(o -> "COMPLETED".equals(o.getStatus())).count();
+            int completed = (int) branchOrders.stream().filter(o -> isCompletedStatus(o.getStatus())).count();
             int cancelled = (int) branchOrders.stream().filter(o -> "CANCELLED".equals(o.getStatus())).count();
             int dineIn    = (int) branchOrders.stream().filter(o -> "DINE_IN".equals(o.getOrderType())).count();
             int takeaway  = (int) branchOrders.stream().filter(o -> "TAKEAWAY".equals(o.getOrderType())).count();
             int delivery  = (int) branchOrders.stream().filter(o -> "DELIVERY".equals(o.getOrderType())).count();
 
             BigDecimal revenue = branchOrders.stream()
-                    .filter(o -> "COMPLETED".equals(o.getStatus()))
+                    .filter(o -> isCompletedStatus(o.getStatus()))
                     .map(OrderAnalytics::getTotalAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -294,12 +294,12 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         long takeawayCount = orders.stream().filter(o -> "TAKEAWAY".equalsIgnoreCase(o.getOrderType())).count();
         long deliveryCount = orders.stream().filter(o -> "DELIVERY".equalsIgnoreCase(o.getOrderType())).count();
 
-        long completedCount = orders.stream().filter(o -> "COMPLETED".equals(o.getStatus())).count();
+        long completedCount = orders.stream().filter(o -> isCompletedStatus(o.getStatus())).count();
         double completionRate = orders.isEmpty() ? 0.0
                 : Math.round((completedCount * 100.0 / orders.size()) * 10.0) / 10.0;
 
         double averagePrepTime = orders.stream()
-                .filter(o -> "COMPLETED".equals(o.getStatus())
+                .filter(o -> isCompletedStatus(o.getStatus())
                         && o.getCompletedAt() != null
                         && o.getOrderReceivedAt() != null)
                 .mapToLong(o -> java.time.Duration.between(o.getOrderReceivedAt(), o.getCompletedAt()).toMinutes())
@@ -338,6 +338,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     private String formatPeakHour(int hour) {
         return String.format("%02d:00", hour);
+    }
+
+    // order-service terminals are SERVED and PICKED_UP — COMPLETED kept for safety
+    private boolean isCompletedStatus(String status) {
+        return "SERVED".equals(status) || "PICKED_UP".equals(status) || "COMPLETED".equals(status);
     }
 
     @Override
@@ -379,7 +384,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         for (int hour = 8; hour <= 22; hour++) {
             List<OrderAnalytics> hourOrders = byHour.getOrDefault(hour, List.of());
             double revenue = hourOrders.stream()
-                    .filter(o -> "COMPLETED".equals(o.getStatus()))
+                    .filter(o -> isCompletedStatus(o.getStatus()))
                     .mapToDouble(o -> o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() * 100.0 : 0.0)
                     .sum();
             String label = String.format("%02d:00", hour);
@@ -546,7 +551,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         List<OrderAnalytics> allOrders = orderAnalyticsRepository.findByOrderReceivedAtBetween(rangeStart, rangeEnd);
 
         Map<String, Double> prepTimeByBranch = allOrders.stream()
-                .filter(o -> "COMPLETED".equals(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
+                .filter(o -> isCompletedStatus(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
                 .collect(Collectors.groupingBy(
                         OrderAnalytics::getBranchId,
                         Collectors.averagingDouble(o ->
@@ -611,11 +616,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                     double cancellationRate = totalOrders > 0 ? round((cancelled * 100.0) / totalOrders) : 0.0;
 
                     Double avgPrep = ordersByBranch.getOrDefault(bid, List.of()).stream()
-                            .filter(o -> "COMPLETED".equals(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
+                            .filter(o -> isCompletedStatus(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
                             .mapToLong(o -> Math.max(0, java.time.Duration.between(o.getOrderReceivedAt(), o.getCompletedAt()).toMinutes()))
                             .average().isPresent()
                             ? ordersByBranch.getOrDefault(bid, List.of()).stream()
-                                    .filter(o -> "COMPLETED".equals(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
+                                    .filter(o -> isCompletedStatus(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)
                                     .mapToLong(o -> Math.max(0, java.time.Duration.between(o.getOrderReceivedAt(), o.getCompletedAt()).toMinutes()))
                                     .average().getAsDouble()
                             : null;
@@ -735,7 +740,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             List<OrderAnalytics> hourOrders = byHour.getOrDefault(h, List.of());
             if (hourOrders.isEmpty()) continue;
             double revenue = hourOrders.stream()
-                    .filter(o -> "COMPLETED".equals(o.getStatus()))
+                    .filter(o -> isCompletedStatus(o.getStatus()))
                     .mapToDouble(o -> o.getTotalAmount() != null ? o.getTotalAmount().doubleValue() : 0.0)
                     .sum();
             ordersByHour.add(AnalyticsDtos.HourlySalesResponse.builder()
