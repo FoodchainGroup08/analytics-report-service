@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="2" value="Branch Service — Class Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="10" width="600" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ENTITY: Branch ========== -->
+    <mxCell id="10" value="«entity»&#xa;Branch" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="240" height="260" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="- id: String (UUID)&#xa;- name: String&#xa;- address: String&#xa;- phone: String&#xa;- description: String&#xa;- active: boolean&#xa;- managerId: String&#xa;- latitude: Double&#xa;- longitude: Double&#xa;- rating: Double&#xa;- createdAt: LocalDateTime&#xa;- updatedAt: LocalDateTime&#xa;- hours: List&lt;BranchHours&gt;" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
+      <mxGeometry y="40" width="240" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="# onCreate(): void&#xa;# onUpdate(): void" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
+      <mxGeometry y="220" width="240" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ENTITY: BranchHours ========== -->
+    <mxCell id="20" value="«entity»&#xa;BranchHours" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="360" y="70" width="230" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="- id: String (UUID)&#xa;- branch: Branch&#xa;- dayOfWeek: int&#xa;- openTime: LocalTime&#xa;- closeTime: LocalTime&#xa;- closed: boolean" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="20">
+      <mxGeometry y="40" width="230" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- INTERFACE: BranchService -->
+    <mxCell id="30" value="«interface»&#xa;BranchService" style="swimlane;fontStyle=3;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="640" y="70" width="270" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
+      <mxGeometry y="40" width="270" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="32" value="+ createBranch(req): BranchResponse&#xa;+ getBranchById(id): BranchResponse&#xa;+ getAllBranches(): List&lt;BranchResponse&gt;&#xa;+ getActiveBranches(): List&lt;BranchSummary&gt;&#xa;+ updateBranch(id, req): BranchResponse&#xa;+ updateBranchStatus(id, req): BranchResponse&#xa;+ setBranchHours(id, hours): BranchResponse&#xa;+ getNearbyBranches(lat, lng, rad): List&#xa;+ deleteBranch(id): void" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
+      <mxGeometry y="50" width="270" height="170" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: BranchServiceImpl -->
+    <mxCell id="33" value="BranchServiceImpl" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="640" y="330" width="270" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="34" value="- branchRepository: BranchRepository&#xa;- branchHoursRepository: BranchHoursRepository" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="33">
+      <mxGeometry y="40" width="270" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="+ createBranch(req): BranchResponse&#xa;+ getNearbyBranches(lat, lng, r): List&#xa;- toResponse(branch): BranchResponse" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="33">
+      <mxGeometry y="80" width="270" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- CONTROLLER: BranchController -->
+    <mxCell id="40" value="«controller»&#xa;BranchController" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="380" width="260" height="210" as="geometry" />
+    </mxCell>
+    <mxCell id="41" value="- branchService: BranchService" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="40">
+      <mxGeometry y="40" width="260" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="42" value="+ createBranch(req): ResponseEntity&#xa;+ getBranchById(id): ResponseEntity&#xa;+ getAllBranches(): ResponseEntity&#xa;+ getActiveBranches(): ResponseEntity&#xa;+ updateBranch(id, req): ResponseEntity&#xa;+ updateStatus(id, req): ResponseEntity&#xa;+ setBranchHours(id, hours): ResponseEntity&#xa;+ getNearby(lat, lng, rad): ResponseEntity&#xa;+ deleteBranch(id): ResponseEntity" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="40">
+      <mxGeometry y="60" width="260" height="150" as="geometry" />
+    </mxCell>
+
+    <!-- REPOSITORY: BranchRepository -->
+    <mxCell id="50" value="«repository»&#xa;BranchRepository" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="360" y="280" width="240" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="51" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="50">
+      <mxGeometry y="40" width="240" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="52" value="+ findByActiveTrue(): List&lt;Branch&gt;&#xa;+ findByManagerId(id): List&lt;Branch&gt;&#xa;+ findAllByActiveTrue(): List&lt;Branch&gt;" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="50">
+      <mxGeometry y="50" width="240" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- REPOSITORY: BranchHoursRepository -->
+    <mxCell id="53" value="«repository»&#xa;BranchHoursRepository" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="360" y="420" width="240" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="54" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="53">
+      <mxGeometry y="40" width="240" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="55" value="+ findByBranchId(id): List&lt;BranchHours&gt;&#xa;+ deleteByBranch(branch): void" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="53">
+      <mxGeometry y="50" width="240" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- DTO Classes -->
+    <mxCell id="60" value="«dto record»&#xa;BranchResponse" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="960" y="70" width="230" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="61" value="- id: String&#xa;- name: String&#xa;- address: String&#xa;- phone: String&#xa;- active: boolean&#xa;- managerId: String&#xa;- latitude: Double&#xa;- longitude: Double&#xa;- rating: Double&#xa;- isOpen: boolean&#xa;- hoursDisplay: String&#xa;- hours: List&lt;BranchHoursResponse&gt;" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="60">
+      <mxGeometry y="40" width="230" height="140" as="geometry" />
+    </mxCell>
+
+    <mxCell id="62" value="«dto record»&#xa;CreateBranchRequest" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="960" y="280" width="230" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="63" value="- name: String&#xa;- address: String&#xa;- phone: String&#xa;- description: String&#xa;- managerId: String&#xa;- latitude: Double&#xa;- longitude: Double" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="62">
+      <mxGeometry y="40" width="230" height="110" as="geometry" />
+    </mxCell>
+
+    <mxCell id="64" value="«dto record»&#xa;NearbyBranchResponse" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="960" y="460" width="230" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="65" value="- id: String&#xa;- name: String&#xa;- address: String&#xa;- distanceKm: double&#xa;- distance: String&#xa;- rating: Double&#xa;- isOpen: boolean&#xa;- hoursDisplay: String" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="64">
+      <mxGeometry y="40" width="230" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- FILTER: GatewayAuthenticationFilter -->
+    <mxCell id="70" value="«filter»&#xa;GatewayAuthenticationFilter" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="630" width="260" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="71" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="70">
+      <mxGeometry y="40" width="260" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="72" value="+ doFilterInternal(req, resp, chain): void&#xa;  (reads X-User-Id, X-User-Role headers)" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="70">
+      <mxGeometry y="50" width="260" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- CONFIG: BranchSampleDataLoader -->
+    <mxCell id="75" value="«config»&#xa;BranchSampleDataLoader" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="640" y="500" width="240" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="76" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="75">
+      <mxGeometry y="40" width="240" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="77" value="+ run(args): void (loads seed data)" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="75">
+      <mxGeometry y="50" width="240" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- Relationships -->
+    <!-- Branch has many BranchHours -->
+    <mxCell id="200" value="1..*" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="10" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- BranchServiceImpl implements BranchService -->
+    <mxCell id="201" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=block;endFill=0;" edge="1" source="33" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- BranchController uses BranchService -->
+    <mxCell id="202" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="40" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- BranchServiceImpl uses BranchRepository -->
+    <mxCell id="203" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="33" target="50" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- BranchServiceImpl uses BranchHoursRepository -->
+    <mxCell id="204" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="33" target="53" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

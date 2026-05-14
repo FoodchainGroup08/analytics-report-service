@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="2" value="Menu Service — Class Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="10" width="600" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ENTITY: MenuCategory -->
+    <mxCell id="10" value="«entity»&#xa;MenuCategory" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="230" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="- id: String (UUID)&#xa;- name: String&#xa;- displayOrder: int&#xa;- active: boolean&#xa;- createdAt: LocalDateTime" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
+      <mxGeometry y="40" width="230" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- ENTITY: MenuItem -->
+    <mxCell id="20" value="«entity»&#xa;MenuItem" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="340" y="70" width="230" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="- id: String (UUID)&#xa;- name: String&#xa;- description: String&#xa;- category: MenuCategory&#xa;- basePrice: BigDecimal&#xa;- imageUrl: String&#xa;- active: boolean&#xa;- createdAt: LocalDateTime&#xa;- updatedAt: LocalDateTime" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="20">
+      <mxGeometry y="40" width="230" height="160" as="geometry" />
+    </mxCell>
+
+    <!-- INTERFACE: MenuService -->
+    <mxCell id="30" value="«interface»&#xa;MenuService" style="swimlane;fontStyle=3;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="70" width="280" height="230" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
+      <mxGeometry y="40" width="280" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="32" value="+ createMenuItem(req, file): MenuItemResponse&#xa;+ getMenuItemById(id): MenuItemResponse&#xa;+ getAllMenuItems(): List&#xa;+ getMenuByBranch(branchId): List&#xa;+ updateMenuItem(id, req, file): Response&#xa;+ deleteMenuItem(id): void&#xa;+ createCategory(req): CategoryResponse&#xa;+ getAllCategories(): List&#xa;+ updateCategory(id, req): CategoryResponse&#xa;+ deleteCategory(id): void&#xa;+ suggestFood(req): FoodSuggestionResponse" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
+      <mxGeometry y="50" width="280" height="180" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: MenuServiceImpl -->
+    <mxCell id="33" value="MenuServiceImpl" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="340" width="280" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="34" value="- menuItemRepository: MenuItemRepository&#xa;- menuCategoryRepository: MenuCategoryRepo&#xa;- s3Service: S3Service&#xa;- aiClient: FoodSuggestionAiClient" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="33">
+      <mxGeometry y="40" width="280" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="+ createMenuItem(req, file): Response&#xa;+ suggestFood(req): FoodSuggestionResponse" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="33">
+      <mxGeometry y="100" width="280" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- INTERFACE: FoodSuggestionAiClient -->
+    <mxCell id="40" value="«interface»&#xa;FoodSuggestionAiClient" style="swimlane;fontStyle=3;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="960" y="70" width="260" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="41" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="40">
+      <mxGeometry y="40" width="260" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="42" value="+ suggest(req, menuItems): FoodSuggestionResponse" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="40">
+      <mxGeometry y="50" width="260" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: GeminiFoodSuggestionClient -->
+    <mxCell id="43" value="GeminiFoodSuggestionClient" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="960" y="200" width="260" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="44" value="- apiKey: String&#xa;- apiUrl: String&#xa;- restTemplate: RestTemplate" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="43">
+      <mxGeometry y="40" width="260" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="45" value="+ suggest(req, items): FoodSuggestionResponse&#xa;- buildPrompt(req, items): String" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="43">
+      <mxGeometry y="80" width="260" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: S3Service -->
+    <mxCell id="50" value="«service»&#xa;S3Service" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="960" y="360" width="260" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="51" value="- s3Client: S3Client&#xa;- bucketName: String&#xa;- region: String" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="50">
+      <mxGeometry y="40" width="260" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="52" value="+ uploadFile(file): String&#xa;+ deleteFile(key): void&#xa;+ getFileUrl(key): String" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="50">
+      <mxGeometry y="80" width="260" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- CONTROLLERS -->
+    <mxCell id="60" value="«controller»&#xa;MenuItemController" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="270" width="240" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="61" value="- menuService: MenuService" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="60">
+      <mxGeometry y="40" width="240" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="62" value="POST /menu-items&#xa;GET /menu-items/{id}&#xa;GET /menu-items&#xa;PUT /menu-items/{id}&#xa;DELETE /menu-items/{id}&#xa;POST /menu-items/suggest" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="60">
+      <mxGeometry y="60" width="240" height="90" as="geometry" />
+    </mxCell>
+
+    <mxCell id="63" value="«controller»&#xa;MenuCategoryController" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="460" width="240" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="64" value="- menuService: MenuService" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="63">
+      <mxGeometry y="40" width="240" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="65" value="POST /categories&#xa;GET /categories&#xa;PUT /categories/{id}&#xa;DELETE /categories/{id}" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="63">
+      <mxGeometry y="60" width="240" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="66" value="«controller»&#xa;MenuBranchController" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="340" y="460" width="240" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="67" value="- menuService: MenuService" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="66">
+      <mxGeometry y="40" width="240" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="68" value="GET /menu/branch/{branchId}" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="66">
+      <mxGeometry y="60" width="240" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- REPOSITORIES -->
+    <mxCell id="70" value="«repository»&#xa;MenuItemRepository" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="340" y="300" width="240" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="71" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="70">
+      <mxGeometry y="40" width="240" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="72" value="+ findByCategoryId(id): List&lt;MenuItem&gt;&#xa;+ findByActiveTrue(): List&lt;MenuItem&gt;&#xa;+ findByBranchId(bId): List&lt;MenuItem&gt;" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="70">
+      <mxGeometry y="50" width="240" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="73" value="«repository»&#xa;MenuCategoryRepository" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="510" width="240" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="74" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="73">
+      <mxGeometry y="40" width="240" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="75" value="+ findByName(name): Optional&lt;MenuCategory&gt;&#xa;+ findByActiveTrue(): List&lt;MenuCategory&gt;" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="73">
+      <mxGeometry y="50" width="240" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- DTO Records -->
+    <mxCell id="80" value="«dto record»&#xa;FoodSuggestionRequest" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="960" y="510" width="260" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="81" value="- branchId: String&#xa;- branchName: String&#xa;- budget: BigDecimal&#xa;- mealType: String&#xa;- appetite: String&#xa;- dietaryPreferences: List&lt;String&gt;&#xa;- peopleCount: Integer&#xa;- fulfillmentType: String&#xa;- limit: Integer" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="80">
+      <mxGeometry y="40" width="260" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- Relationships -->
+    <!-- MenuItem belongs to MenuCategory -->
+    <mxCell id="200" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="20" target="10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- MenuServiceImpl implements MenuService -->
+    <mxCell id="201" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=block;endFill=0;" edge="1" source="33" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- MenuItemController uses MenuService -->
+    <mxCell id="202" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="60" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- MenuCategoryController uses MenuService -->
+    <mxCell id="203" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="63" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- MenuBranchController uses MenuService -->
+    <mxCell id="204" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="66" target="30" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- MenuServiceImpl uses MenuItemRepository -->
+    <mxCell id="205" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="33" target="70" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- MenuServiceImpl uses MenuCategoryRepository -->
+    <mxCell id="206" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="33" target="73" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- MenuServiceImpl uses S3Service -->
+    <mxCell id="207" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="33" target="50" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- MenuServiceImpl uses FoodSuggestionAiClient -->
+    <mxCell id="208" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="33" target="40" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- GeminiFoodSuggestionClient implements FoodSuggestionAiClient -->
+    <mxCell id="209" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=block;endFill=0;" edge="1" source="43" target="40" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

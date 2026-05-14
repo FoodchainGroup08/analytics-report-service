@@ -40,7 +40,11 @@ public interface AnalyticsService {
 
     // ── Enriched Head Office Admin endpoints ──────────────────────────────────
 
-    AnalyticsDtos.OverviewResponse getOverview(LocalDate startDate, LocalDate endDate);
+    default AnalyticsDtos.OverviewResponse getOverview(LocalDate startDate, LocalDate endDate) {
+        return getOverview(null, startDate, endDate);
+    }
+
+    AnalyticsDtos.OverviewResponse getOverview(String branchId, LocalDate startDate, LocalDate endDate);
 
     List<AnalyticsDtos.BranchComparisonResponse> getBranchComparison(LocalDate startDate, LocalDate endDate);
 

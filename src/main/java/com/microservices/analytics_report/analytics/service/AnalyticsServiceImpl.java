@@ -500,11 +500,14 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     @Transactional(readOnly = true)
-    public AnalyticsDtos.OverviewResponse getOverview(LocalDate startDate, LocalDate endDate) {
+    public AnalyticsDtos.OverviewResponse getOverview(String branchId, LocalDate startDate, LocalDate endDate) {
         LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
 
-        List<BranchDailySummary> summaries = branchDailySummaryRepository.findBySummaryDateBetween(start, end);
+        boolean scopedToBranch = branchId != null && !branchId.isBlank();
+        List<BranchDailySummary> summaries = scopedToBranch
+                ? branchDailySummaryRepository.findByBranchIdAndSummaryDateBetweenOrderBySummaryDateAsc(branchId, start, end)
+                : branchDailySummaryRepository.findBySummaryDateBetween(start, end);
 
         long totalOrders     = summaries.stream().mapToLong(BranchDailySummary::getTotalOrders).sum();
         long completedOrders = summaries.stream().mapToLong(BranchDailySummary::getCompletedOrders).sum();
@@ -524,8 +527,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         LocalDate priorEnd   = start.minusDays(1);
         LocalDate priorStart = priorEnd.minusDays(periodDays - 1);
 
-        List<BranchDailySummary> priorSummaries = branchDailySummaryRepository
-                .findBySummaryDateBetween(priorStart, priorEnd);
+        List<BranchDailySummary> priorSummaries = scopedToBranch
+                ? branchDailySummaryRepository.findByBranchIdAndSummaryDateBetweenOrderBySummaryDateAsc(branchId, priorStart, priorEnd)
+                : branchDailySummaryRepository.findBySummaryDateBetween(priorStart, priorEnd);
         long priorOrders  = priorSummaries.stream().mapToLong(BranchDailySummary::getTotalOrders).sum();
         double priorRevenue = priorSummaries.stream()
                 .mapToDouble(s -> s.getTotalRevenue().doubleValue()).sum();
@@ -548,7 +552,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         // Fastest = shortest avg prep time; Slowest = longest
         LocalDateTime rangeStart = start.atStartOfDay();
         LocalDateTime rangeEnd   = end.atTime(LocalTime.MAX);
-        List<OrderAnalytics> allOrders = orderAnalyticsRepository.findByOrderReceivedAtBetween(rangeStart, rangeEnd);
+        List<OrderAnalytics> allOrders = scopedToBranch
+                ? orderAnalyticsRepository.findByBranchIdAndOrderReceivedAtBetween(branchId, rangeStart, rangeEnd)
+                : orderAnalyticsRepository.findByOrderReceivedAtBetween(rangeStart, rangeEnd);
 
         Map<String, Double> prepTimeByBranch = allOrders.stream()
                 .filter(o -> isCompletedStatus(o.getStatus()) && o.getCompletedAt() != null && o.getOrderReceivedAt() != null)

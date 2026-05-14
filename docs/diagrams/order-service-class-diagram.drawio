@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="2" value="Order Service — Class Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="10" width="600" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ENTITY: Order ========== -->
+    <mxCell id="10" value="«entity»&#xa;Order" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="240" height="310" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="- id: String (UUID)&#xa;- branchId: String&#xa;- customerId: String&#xa;- orderType: OrderType&#xa;- status: OrderStatus&#xa;- tableNumber: String&#xa;- deliveryAddress: String&#xa;- totalAmount: BigDecimal&#xa;- notes: String&#xa;- version: Long&#xa;- idempotencyKey: String&#xa;- customerName: String&#xa;- customerEmail: String&#xa;- phoneNumber: String&#xa;- paymentMethod: String&#xa;- deliveryFee: BigDecimal&#xa;- branchName: String&#xa;- estimatedTime: String&#xa;- createdAt: LocalDateTime&#xa;- updatedAt: LocalDateTime" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
+      <mxGeometry y="40" width="240" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="- items: List&lt;OrderItem&gt;" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
+      <mxGeometry y="260" width="240" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ENUM: OrderStatus -->
+    <mxCell id="13" value="«enum»&#xa;OrderStatus" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="420" width="200" height="170" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="RECEIVED&#xa;CONFIRMED&#xa;PREPARING&#xa;READY&#xa;PICKED_UP&#xa;SERVED&#xa;COMPLETED&#xa;CANCELLED" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="13">
+      <mxGeometry y="40" width="200" height="130" as="geometry" />
+    </mxCell>
+
+    <!-- ENUM: OrderType -->
+    <mxCell id="15" value="«enum»&#xa;OrderType" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="280" y="420" width="160" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="DINE_IN&#xa;TAKEAWAY&#xa;DELIVERY" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="15">
+      <mxGeometry y="40" width="160" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ENTITY: OrderItem ========== -->
+    <mxCell id="20" value="«entity»&#xa;OrderItem" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="340" y="70" width="230" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="- id: String (UUID)&#xa;- order: Order&#xa;- menuItemId: String&#xa;- menuItemName: String&#xa;- quantity: Integer&#xa;- unitPrice: BigDecimal&#xa;- subtotal: BigDecimal&#xa;- specialInstructions: String" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="20">
+      <mxGeometry y="40" width="230" height="160" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ENTITY: OutboxEvent ========== -->
+    <mxCell id="30" value="«entity»&#xa;OutboxEvent" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="70" width="230" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="- id: String (UUID)&#xa;- topic: String&#xa;- partitionKey: String&#xa;- payload: String&#xa;- published: Boolean&#xa;- createdAt: LocalDateTime" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
+      <mxGeometry y="40" width="230" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- ========== ENTITY: OrderStatusUpdate ========== -->
+    <mxCell id="35" value="«entity»&#xa;OrderStatusUpdate" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="900" y="70" width="230" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="36" value="- id: String (UUID)&#xa;- orderId: String&#xa;- previousStatus: String&#xa;- newStatus: String&#xa;- updatedBy: String&#xa;- notes: String&#xa;- updatedAt: LocalDateTime" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="35">
+      <mxGeometry y="40" width="230" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- INTERFACE: OrderService -->
+    <mxCell id="40" value="«interface»&#xa;OrderService" style="swimlane;fontStyle=3;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="280" width="250" height="170" as="geometry" />
+    </mxCell>
+    <mxCell id="41" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="40">
+      <mxGeometry y="40" width="250" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="42" value="+ createOrder(req, userId, email, key): Response&#xa;+ getFrontendOrderById(id): Response&#xa;+ getActiveOrders(cId, bId, p, s): Page&#xa;+ getOrderHistory(cId, bId, p, s): Page&#xa;+ updateOrderStatus(id, status, by, notes): Response&#xa;+ cancelOrder(id, by, reason): Response" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="40">
+      <mxGeometry y="50" width="250" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: OrderServiceImpl -->
+    <mxCell id="43" value="OrderServiceImpl" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="490" width="250" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="44" value="- orderRepository: OrderRepository&#xa;- outboxRepository: OutboxEventRepo&#xa;- statusValidator: StatusTransitionValidator&#xa;- objectMapper: ObjectMapper" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="43">
+      <mxGeometry y="40" width="250" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="45" value="+ createOrder(...): FrontendOrderResponse&#xa;+ updateOrderStatus(...): OrderResponse" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="43">
+      <mxGeometry y="100" width="250" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: StatusTransitionValidator -->
+    <mxCell id="46" value="StatusTransitionValidator" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="900" y="280" width="240" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="47" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="46">
+      <mxGeometry y="40" width="240" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="48" value="+ validate(current, next): boolean" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="46">
+      <mxGeometry y="50" width="240" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- CONTROLLER: OrderController -->
+    <mxCell id="50" value="«controller»&#xa;OrderController" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="650" width="250" height="170" as="geometry" />
+    </mxCell>
+    <mxCell id="51" value="- orderService: OrderService" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="50">
+      <mxGeometry y="40" width="250" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="52" value="+ createOrder(req, userId, email, key): RE&#xa;+ getOrderById(orderId): RE&#xa;+ getActiveOrders(cId, bId, p, s): RE&#xa;+ getOrderHistory(cId, bId, p, s): RE&#xa;+ updateOrderStatus(orderId, req): RE&#xa;+ cancelOrder(orderId, req): RE" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="50">
+      <mxGeometry y="60" width="250" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- REPOSITORY: OrderRepository -->
+    <mxCell id="60" value="«repository»&#xa;OrderRepository" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="360" y="650" width="230" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="61" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="60">
+      <mxGeometry y="40" width="230" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="62" value="+ findByIdempotencyKey(key): Optional&#xa;+ findByCustomerId(id, pg): Page&#xa;+ findByBranchId(id, pg): Page" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="60">
+      <mxGeometry y="50" width="230" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- REPOSITORY: OutboxEventRepository -->
+    <mxCell id="63" value="«repository»&#xa;OutboxEventRepository" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="660" width="240" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="64" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="63">
+      <mxGeometry y="40" width="240" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="65" value="+ findUnpublishedEvents(): List&lt;OutboxEvent&gt;" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="63">
+      <mxGeometry y="50" width="240" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- KAFKA: OutboxRelay -->
+    <mxCell id="70" value="«kafka producer»&#xa;OutboxRelay" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="900" y="430" width="240" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="71" value="- outboxEventRepository: OutboxEventRepo&#xa;- kafkaTemplate: KafkaTemplate" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="70">
+      <mxGeometry y="40" width="240" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="72" value="@Scheduled&#xa;+ relayUnpublishedEvents(): void" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="70">
+      <mxGeometry y="80" width="240" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- DTO Classes -->
+    <mxCell id="80" value="«dto»&#xa;CreateOrderRequest" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="900" y="580" width="230" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="81" value="- branchId: String&#xa;- branchName: String&#xa;- items: List&lt;OrderItemRequest&gt;&#xa;- orderType: String&#xa;- deliveryAddress: String&#xa;- tableNumber: String&#xa;- customerName: String&#xa;- paymentMethod: String" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="80">
+      <mxGeometry y="40" width="230" height="90" as="geometry" />
+    </mxCell>
+
+    <!-- Relationships -->
+    <!-- Order has many OrderItems -->
+    <mxCell id="200" value="1..*" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="10" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- Order uses OrderStatus -->
+    <mxCell id="201" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="10" target="13" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- Order uses OrderType -->
+    <mxCell id="202" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="10" target="15" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- OrderServiceImpl implements OrderService -->
+    <mxCell id="203" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=block;endFill=0;" edge="1" source="43" target="40" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- OrderController uses OrderService -->
+    <mxCell id="204" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="50" target="40" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- OrderServiceImpl uses OrderRepository -->
+    <mxCell id="205" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="43" target="60" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- OrderServiceImpl uses OutboxEventRepository -->
+    <mxCell id="206" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="43" target="63" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- OutboxRelay uses OutboxEventRepository -->
+    <mxCell id="207" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="70" target="63" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- OrderServiceImpl uses StatusTransitionValidator -->
+    <mxCell id="208" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="43" target="46" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

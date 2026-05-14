@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="2" value="Security Architecture — Cross-Service Class Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="800" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ====== API GATEWAY LAYER ====== -->
+    <mxCell id="3" value="API Gateway" style="text;html=1;strokeColor=none;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="380" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: JwtAuthFilter (Gateway) -->
+    <mxCell id="10" value="«filter»&#xa;JwtAuthFilter&#xa;(api-gateway)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="100" width="280" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="- jwtSecret: String&#xa;- PUBLIC_PATHS: List&lt;String&gt;&#xa;- WEBSOCKET_PATHS: List&lt;String&gt;" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
+      <mxGeometry y="40" width="280" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="+ filter(exchange, chain): Mono&lt;Void&gt;&#xa;- parseToken(token): Claims&#xa;- isPublicPath(path): boolean&#xa;- isWebSocketPath(path): boolean&#xa;- unauthorized(exchange, msg): Mono&#xa;&#xa;Implements: GlobalFilter, Ordered&#xa;&#xa;Injects headers:&#xa;  X-User-Id, X-User-Role&#xa;  X-User-Email, X-User-BranchId" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
+      <mxGeometry y="90" width="280" height="110" as="geometry" />
+    </mxCell>
+
+    <!-- ====== USER SERVICE SECURITY ====== -->
+    <mxCell id="4" value="User Service — Security Layer" style="text;html=1;strokeColor=none;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="60" width="400" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- INTERFACE: JwtService (user-service) -->
+    <mxCell id="20" value="«interface»&#xa;JwtService&#xa;(user-service)" style="swimlane;fontStyle=3;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="400" y="100" width="260" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="20">
+      <mxGeometry y="40" width="260" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="22" value="+ generateAccessToken(user): String&#xa;+ generateRefreshToken(user): String&#xa;+ validateAccessToken(token): UserDetails&#xa;+ extractUserId(token): String&#xa;+ extractJti(token): String" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="20">
+      <mxGeometry y="50" width="260" height="80" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: JwtServiceImpl -->
+    <mxCell id="23" value="JwtServiceImpl" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="400" y="270" width="260" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="24" value="- jwtSecret: String&#xa;- accessExpirationMs: long (15min)&#xa;- refreshExpirationMs: long (7days)" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="23">
+      <mxGeometry y="40" width="260" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="+ generateAccessToken(user): String&#xa;+ validateAccessToken(token): UserDetails&#xa;- buildKey(): SecretKey" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="23">
+      <mxGeometry y="90" width="260" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- FILTER: JwtAuthenticationFilter (Login) -->
+    <mxCell id="30" value="«filter»&#xa;JwtAuthenticationFilter&#xa;(user-service — handles POST /login)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="100" width="290" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="- authenticationManager: AuthenticationManager&#xa;- authService: AuthService&#xa;- emailService: EmailService" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
+      <mxGeometry y="40" width="290" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="32" value="+ doFilterInternal(req, resp, chain): void&#xa;  Validates email/password via regex&#xa;  Authenticates via AuthManager&#xa;  Writes JWT AuthResponse" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
+      <mxGeometry y="90" width="290" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- FILTER: JwtAuthorizationFilter (user-service) -->
+    <mxCell id="33" value="«filter»&#xa;JwtAuthorizationFilter&#xa;(user-service — validates Bearer tokens)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="300" width="290" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="34" value="- jwtService: JwtService&#xa;- tokenBlacklistService: TokenBlacklistService" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="33">
+      <mxGeometry y="40" width="290" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="+ doFilterInternal(req, resp, chain): void&#xa;  Extracts Bearer token, validates via JwtService&#xa;  Sets SecurityContextHolder" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="33">
+      <mxGeometry y="80" width="290" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: SecurityConfig (user-service) -->
+    <mxCell id="40" value="«config»&#xa;SecurityConfig (user-service)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="400" y="440" width="290" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="41" value="- jwtAuthorizationFilter: JwtAuthorizationFilter&#xa;- jwtAuthenticationFilter: JwtAuthFilter" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="40">
+      <mxGeometry y="40" width="290" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="42" value="+ filterChain(http): SecurityFilterChain&#xa;  Public: /v1/auth/**, /oauth2/**, /actuator&#xa;  Authenticated: all others" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="40">
+      <mxGeometry y="80" width="290" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- INTERFACE: TokenBlacklistService -->
+    <mxCell id="50" value="«interface»&#xa;TokenBlacklistService" style="swimlane;fontStyle=3;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="480" width="260" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="51" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="50">
+      <mxGeometry y="40" width="260" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="52" value="+ blacklist(jti, ttl): void&#xa;+ isBlacklisted(jti): boolean" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="50">
+      <mxGeometry y="50" width="260" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- CLASS: TokenBlacklistServiceImpl -->
+    <mxCell id="53" value="TokenBlacklistServiceImpl&#xa;(uses Redis)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="620" width="260" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="54" value="- redisTemplate: RedisTemplate" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="53">
+      <mxGeometry y="40" width="260" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="55" value="+ blacklist(jti, ttl): void&#xa;+ isBlacklisted(jti): boolean" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="53">
+      <mxGeometry y="60" width="260" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- OAuth2 -->
+    <mxCell id="60" value="CustomOAuth2UserService" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="380" width="280" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="61" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="60">
+      <mxGeometry y="40" width="280" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="62" value="+ loadUser(userRequest): OAuth2User&#xa;  Upserts User from Google profile" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="60">
+      <mxGeometry y="50" width="280" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="63" value="OAuth2AuthenticationSuccessHandler" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="510" width="280" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="64" value="- jwtService: JwtService" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="63">
+      <mxGeometry y="40" width="280" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="65" value="+ onAuthenticationSuccess(req, resp, auth): void&#xa;  Issues JWT pair and redirects to frontend" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="63">
+      <mxGeometry y="60" width="280" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- GatewayAuthenticationFilter (downstream services) -->
+    <mxCell id="5" value="Downstream Services Security Layer" style="text;html=1;strokeColor=none;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="650" width="940" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="70" value="«filter»&#xa;GatewayAuthenticationFilter&#xa;(branch, menu, order, kitchen, notifications, analytics)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="690" width="400" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="71" value="" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="70">
+      <mxGeometry y="40" width="400" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="72" value="+ doFilterInternal(req, resp, chain): void&#xa;  Reads X-User-Id header (set by API Gateway)&#xa;  Reads X-User-Role header&#xa;  Sets SecurityContext with pre-authenticated token&#xa;  Rejects requests without gateway headers" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="70">
+      <mxGeometry y="50" width="400" height="80" as="geometry" />
+    </mxCell>
+
+    <!-- User entity -->
+    <mxCell id="80" value="«entity»&#xa;User implements UserDetails" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="500" y="690" width="270" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="81" value="- role: Role (CUSTOMER|KITCHEN_STAFF|&#xa;         BRANCH_MANAGER|HEAD_OFFICE_ADMIN)&#xa;- isActive: boolean&#xa;- isEmailVerified: boolean" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="80">
+      <mxGeometry y="40" width="270" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="82" value="+ getAuthorities(): Collection&#xa;+ getUsername(): String (email)&#xa;+ isEnabled(): boolean (isActive)" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="80">
+      <mxGeometry y="100" width="270" height="30" as="geometry" />
+    </mxCell>
+
+    <!-- Relationships -->
+    <!-- JwtAuthenticationFilter uses JwtService (indirectly via AuthService) -->
+    <mxCell id="200" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="30" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- JwtAuthorizationFilter uses JwtService -->
+    <mxCell id="201" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="33" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- JwtServiceImpl implements JwtService -->
+    <mxCell id="202" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=block;endFill=0;" edge="1" source="23" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- SecurityConfig uses JwtAuthorizationFilter -->
+    <mxCell id="203" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="40" target="33" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- JwtAuthorizationFilter uses TokenBlacklistService -->
+    <mxCell id="204" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="33" target="50" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- TokenBlacklistServiceImpl implements TokenBlacklistService -->
+    <mxCell id="205" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=block;endFill=0;" edge="1" source="53" target="50" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- OAuth2SuccessHandler uses JwtService -->
+    <mxCell id="206" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="63" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- SecurityConfig uses CustomOAuth2UserService -->
+    <mxCell id="207" value="" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;" edge="1" source="40" target="60" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <!-- JwtAuthFilter (gateway) trusts same secret as JwtServiceImpl -->
+    <mxCell id="208" value="same JWT secret" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=open;endFill=0;strokeColor=#d79b00;" edge="1" source="10" target="23" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

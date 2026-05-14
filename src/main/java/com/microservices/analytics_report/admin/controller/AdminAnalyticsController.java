@@ -64,11 +64,12 @@ public class AdminAnalyticsController {
                security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<AnalyticsDtos.OverviewResponse> getOverview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String branchId) {
         LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
-        log.info("GET /admin/analytics/overview from={} to={}", start, end);
-        return ResponseEntity.ok(analyticsService.getOverview(start, end));
+        log.info("GET /admin/analytics/overview from={} to={} branchId={}", start, end, branchId);
+        return ResponseEntity.ok(analyticsService.getOverview(branchId, start, end));
     }
 
     @GetMapping("/compare")
@@ -94,11 +95,12 @@ public class AdminAnalyticsController {
     public ResponseEntity<AnalyticsDtos.TrendsResponse> getTrends(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false, defaultValue = "DAY") String interval) {
+            @RequestParam(required = false, defaultValue = "DAY") String interval,
+            @RequestParam(required = false) String branchId) {
         LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
-        log.info("GET /admin/analytics/trends from={} to={} interval={}", start, end, interval);
-        return ResponseEntity.ok(analyticsService.getTrends(null, start, end, interval));
+        log.info("GET /admin/analytics/trends from={} to={} interval={} branchId={}", start, end, interval, branchId);
+        return ResponseEntity.ok(analyticsService.getTrends(branchId, start, end, interval));
     }
 
     @GetMapping("/operational")
@@ -108,11 +110,12 @@ public class AdminAnalyticsController {
                security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<AnalyticsDtos.OperationalAnalyticsResponse> getOperational(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String branchId) {
         LocalDate start = startDate != null ? startDate : LocalDate.now();
         LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
-        log.info("GET /admin/analytics/operational from={} to={}", start, end);
-        return ResponseEntity.ok(analyticsService.getOperationalAnalytics(null, start, end));
+        log.info("GET /admin/analytics/operational from={} to={} branchId={}", start, end, branchId);
+        return ResponseEntity.ok(analyticsService.getOperationalAnalytics(branchId, start, end));
     }
 
     @GetMapping("/popular-items")
@@ -123,10 +126,11 @@ public class AdminAnalyticsController {
     public ResponseEntity<List<AnalyticsDtos.PopularItemResponse>> getPopularItems(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String branchId) {
         LocalDate start = startDate != null ? startDate : LocalDate.now().minusDays(30);
         LocalDate end   = endDate   != null ? endDate   : LocalDate.now();
-        log.info("GET /admin/analytics/popular-items from={} to={} limit={}", start, end, limit);
-        return ResponseEntity.ok(analyticsService.getPopularItemsForPeriod(null, start, end, limit));
+        log.info("GET /admin/analytics/popular-items from={} to={} limit={} branchId={}", start, end, limit, branchId);
+        return ResponseEntity.ok(analyticsService.getPopularItemsForPeriod(branchId, start, end, limit));
     }
 }
