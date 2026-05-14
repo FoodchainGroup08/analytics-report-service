@@ -1,236 +1,183 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
-  <root>
-    <mxCell id="0" />
-    <mxCell id="1" parent="0" />
+<mxfile host="app.diagrams.net">
+  <diagram name="Event-Driven Architecture">
+    <mxGraphModel dx="1422" dy="762" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2000" pageHeight="1400" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
 
-    <!-- Title -->
-    <mxCell id="2" value="FoodChain — Event-Driven Architecture (Kafka Topics and Message Flow)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="200" y="10" width="900" height="40" as="geometry" />
-    </mxCell>
+        <!-- Title -->
+        <mxCell id="title" value="FoodChain — Event-Driven Architecture (Apache Kafka)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontColor=#1A1A1A;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="1100" height="45" as="geometry" />
+        </mxCell>
 
-    <!-- ====== PRODUCERS COLUMN ====== -->
-    <mxCell id="5" value="PRODUCERS" style="text;html=1;strokeColor=none;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="60" y="65" width="300" height="28" as="geometry" />
-    </mxCell>
+        <!-- ═══ Producers Column ═══ -->
+        <mxCell id="prod_label" value="&lt;b&gt;EVENT PRODUCERS&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#7D6608;" vertex="1" parent="1">
+          <mxGeometry x="60" y="70" width="280" height="30" as="geometry" />
+        </mxCell>
 
-    <!-- ORDER SERVICE: OutboxRelay -->
-    <mxCell id="10" value="«kafka producer»&#xa;OutboxRelay&#xa;(order-service)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
-      <mxGeometry x="60" y="100" width="280" height="120" as="geometry" />
-    </mxCell>
-    <mxCell id="11" value="- kafkaTemplate: KafkaTemplate&#xa;- outboxEventRepository: OutboxEventRepo" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
-      <mxGeometry y="40" width="280" height="40" as="geometry" />
-    </mxCell>
-    <mxCell id="12" value="@Scheduled(fixedDelay=500)&#xa;+ relayUnpublishedEvents(): void" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="10">
-      <mxGeometry y="80" width="280" height="40" as="geometry" />
-    </mxCell>
+        <!-- User Service -->
+        <mxCell id="UserSvc" value="&lt;b&gt;User Service&lt;/b&gt;&lt;hr&gt;port: 8082&lt;br&gt;KafkaEmailProducer&lt;br&gt;→ publishes on user registration&lt;br&gt;→ publishes on password reset" style="text;html=1;strokeColor=#2E86C1;fillColor=#EBF5FB;align=left;verticalAlign=top;spacingLeft=6;rounded=1;arcSize=5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="115" width="260" height="115" as="geometry" />
+        </mxCell>
 
-    <!-- USER SERVICE: KafkaEmailProducer -->
-    <mxCell id="13" value="«kafka producer»&#xa;KafkaEmailProducer&#xa;(user-service)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
-      <mxGeometry x="60" y="250" width="280" height="110" as="geometry" />
-    </mxCell>
-    <mxCell id="14" value="- kafkaTemplate: KafkaTemplate&#xa;- emailTopic: String" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="13">
-      <mxGeometry y="40" width="280" height="30" as="geometry" />
-    </mxCell>
-    <mxCell id="15" value="+ sendEmail(to, name, subj, html, type): void&#xa;  topic: notification.email.send" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="13">
-      <mxGeometry y="70" width="280" height="40" as="geometry" />
-    </mxCell>
+        <!-- Order Service -->
+        <mxCell id="OrderSvc" value="&lt;b&gt;Order Service&lt;/b&gt;&lt;hr&gt;port: 8083&lt;br&gt;OutboxRelay (Transactional Outbox)&lt;br&gt;→ publishes on order placed&lt;br&gt;→ publishes on status change" style="text;html=1;strokeColor=#D35400;fillColor=#FDEBD0;align=left;verticalAlign=top;spacingLeft=6;rounded=1;arcSize=5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="280" width="260" height="115" as="geometry" />
+        </mxCell>
 
-    <!-- OutboxEvent DTO (payload) -->
-    <mxCell id="16" value="«outbox payload» — order.received&#xa;orderId, customerId, customerName,&#xa;customerEmail, branchId, status,&#xa;totalAmount, orderType, tableNumber,&#xa;notes, items[]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;" vertex="1" parent="1">
-      <mxGeometry x="60" y="400" width="280" height="90" as="geometry" />
-    </mxCell>
+        <!-- Analytics Service (also produces?) -->
+        <mxCell id="AnalyticsSvc_prod" value="&lt;b&gt;Analytics Service&lt;/b&gt;&lt;hr&gt;port: 8087&lt;br&gt;AnalyticsEventConsumer&lt;br&gt;→ consumes order events&lt;br&gt;→ stores aggregated metrics" style="text;html=1;strokeColor=#6C3483;fillColor=#E8DAEF;align=left;verticalAlign=top;spacingLeft=6;rounded=1;arcSize=5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="450" width="260" height="115" as="geometry" />
+        </mxCell>
 
-    <mxCell id="17" value="«outbox payload» — order.status.updated&#xa;orderId, customerId, customerName,&#xa;customerEmail, branchId, previousStatus,&#xa;newStatus, updatedBy, notes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;" vertex="1" parent="1">
-      <mxGeometry x="60" y="510" width="280" height="80" as="geometry" />
-    </mxCell>
+        <!-- ═══ Kafka Broker (Center) ═══ -->
+        <mxCell id="KafkaBroker" value="Apache Kafka&#xa;Broker" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;size=15;fillColor=#231F20;strokeColor=#000000;fontColor=#ffffff;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="740" y="280" width="200" height="185" as="geometry" />
+        </mxCell>
 
-    <mxCell id="18" value="«outbox payload» — order.ready&#xa;orderId, customerId, customerName,&#xa;customerEmail, branchId,&#xa;orderType, tableNumber" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;" vertex="1" parent="1">
-      <mxGeometry x="60" y="610" width="280" height="80" as="geometry" />
-    </mxCell>
+        <!-- ═══ Kafka Topics ═══ -->
+        <mxCell id="topic1" value="notification.email.send" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FDEBD0;strokeColor=#D35400;fontColor=#7E5109;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="95" width="210" height="50" as="geometry" />
+        </mxCell>
 
-    <mxCell id="19" value="«email payload» — notification.email.send&#xa;toEmail, toName, subject,&#xa;htmlContent, emailType" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;" vertex="1" parent="1">
-      <mxGeometry x="60" y="710" width="280" height="70" as="geometry" />
-    </mxCell>
+        <mxCell id="topic2" value="kitchen.order.created" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FDEBD0;strokeColor=#D35400;fontColor=#7E5109;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="200" width="210" height="50" as="geometry" />
+        </mxCell>
 
-    <mxCell id="19b" value="«trigger» — analytics.daily.rollup&#xa;date string (YYYY-MM-DD)&#xa;Triggers daily summary computation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;" vertex="1" parent="1">
-      <mxGeometry x="60" y="800" width="280" height="70" as="geometry" />
-    </mxCell>
+        <mxCell id="topic3" value="order.placed.event&#xa;order.status.updated.event" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FDEBD0;strokeColor=#D35400;fontColor=#7E5109;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="310" width="210" height="60" as="geometry" />
+        </mxCell>
 
-    <!-- ====== KAFKA TOPICS (CENTER) ====== -->
-    <mxCell id="6" value="KAFKA TOPICS" style="text;html=1;strokeColor=none;fillColor=#ffe6cc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="490" y="65" width="280" height="28" as="geometry" />
-    </mxCell>
+        <mxCell id="topic4" value="notification.order.confirmed&#xa;notification.order.ready" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FDEBD0;strokeColor=#D35400;fontColor=#7E5109;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="420" width="210" height="55" as="geometry" />
+        </mxCell>
 
-    <!-- Topic: order.received -->
-    <mxCell id="20" value="order.received" style="shape=mxgraph.bpmn.shape;perimeter=mxPerimeter.ellipsePerimeter;symbol=terminate;isLooping=0;isSequential=0;isCompensation=0;outline=throwing;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=12;" vertex="1" parent="1">
-      <mxGeometry x="560" y="110" width="140" height="80" as="geometry" />
-    </mxCell>
+        <mxCell id="topic5" value="notification.welcome" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FDEBD0;strokeColor=#D35400;fontColor=#7E5109;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="530" width="210" height="50" as="geometry" />
+        </mxCell>
 
-    <!-- Topic: order.status.updated -->
-    <mxCell id="21" value="order.status.updated" style="shape=mxgraph.bpmn.shape;perimeter=mxPerimeter.ellipsePerimeter;symbol=terminate;isLooping=0;isSequential=0;isCompensation=0;outline=throwing;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="540" y="270" width="180" height="80" as="geometry" />
-    </mxCell>
+        <!-- ═══ Consumers Column ═══ -->
+        <mxCell id="cons_label" value="&lt;b&gt;EVENT CONSUMERS&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#1E8449;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="70" width="280" height="30" as="geometry" />
+        </mxCell>
 
-    <!-- Topic: order.ready -->
-    <mxCell id="22" value="order.ready" style="shape=mxgraph.bpmn.shape;perimeter=mxPerimeter.ellipsePerimeter;symbol=terminate;isLooping=0;isSequential=0;isCompensation=0;outline=throwing;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=12;" vertex="1" parent="1">
-      <mxGeometry x="565" y="440" width="130" height="70" as="geometry" />
-    </mxCell>
+        <!-- Kitchen Service -->
+        <mxCell id="KitchenSvc" value="&lt;b&gt;Kitchen Service&lt;/b&gt;&lt;hr&gt;port: 8085&lt;br&gt;KitchenEventConsumer&lt;br&gt;← kitchen.order.created&lt;br&gt;← kitchen.order.updated&lt;br&gt;→ stores to Redis queue" style="text;html=1;strokeColor=#1E8449;fillColor=#EAFAF1;align=left;verticalAlign=top;spacingLeft=6;rounded=1;arcSize=5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="115" width="260" height="130" as="geometry" />
+        </mxCell>
 
-    <!-- Topic: notification.email.send -->
-    <mxCell id="23" value="notification.&#xa;email.send" style="shape=mxgraph.bpmn.shape;perimeter=mxPerimeter.ellipsePerimeter;symbol=terminate;isLooping=0;isSequential=0;isCompensation=0;outline=throwing;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="560" y="590" width="140" height="80" as="geometry" />
-    </mxCell>
+        <!-- Analytics Service Consumer -->
+        <mxCell id="AnalyticsSvcC" value="&lt;b&gt;Analytics Service&lt;/b&gt;&lt;hr&gt;port: 8087&lt;br&gt;AnalyticsEventConsumer&lt;br&gt;← order.placed.event&lt;br&gt;← order.status.updated.event&lt;br&gt;→ stores to MySQL analytics_db" style="text;html=1;strokeColor=#6C3483;fillColor=#E8DAEF;align=left;verticalAlign=top;spacingLeft=6;rounded=1;arcSize=5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="290" width="260" height="135" as="geometry" />
+        </mxCell>
 
-    <!-- Topic: analytics.daily.rollup -->
-    <mxCell id="24" value="analytics.&#xa;daily.rollup" style="shape=mxgraph.bpmn.shape;perimeter=mxPerimeter.ellipsePerimeter;symbol=terminate;isLooping=0;isSequential=0;isCompensation=0;outline=throwing;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="565" y="750" width="130" height="70" as="geometry" />
-    </mxCell>
+        <!-- Notifications Service -->
+        <mxCell id="NotificationsSvc" value="&lt;b&gt;Notifications Service&lt;/b&gt;&lt;hr&gt;port: 8086&lt;br&gt;NotificationEventConsumer&lt;br&gt;← notification.email.send&lt;br&gt;← notification.order.confirmed&lt;br&gt;← notification.order.ready&lt;br&gt;← notification.welcome&lt;br&gt;→ sends via SMTP / Brevo" style="text;html=1;strokeColor=#922B21;fillColor=#FDEDEC;align=left;verticalAlign=top;spacingLeft=6;rounded=1;arcSize=5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="470" width="260" height="160" as="geometry" />
+        </mxCell>
 
-    <!-- ====== CONSUMERS COLUMN ====== -->
-    <mxCell id="7" value="CONSUMERS" style="text;html=1;strokeColor=none;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=13;fontStyle=1;" vertex="1" parent="1">
-      <mxGeometry x="870" y="65" width="700" height="28" as="geometry" />
-    </mxCell>
+        <!-- ═══ Producer → Topic edges ═══ -->
+        <mxCell id="pe1" value="publishes" style="endArrow=open;endFill=0;strokeColor=#2E86C1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="UserSvc" target="topic1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe2" value="publishes" style="endArrow=open;endFill=0;strokeColor=#D35400;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="OrderSvc" target="topic2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe3" value="publishes" style="endArrow=open;endFill=0;strokeColor=#D35400;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="OrderSvc" target="topic3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe4" value="publishes" style="endArrow=open;endFill=0;strokeColor=#D35400;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="OrderSvc" target="topic4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pe5" value="publishes" style="endArrow=open;endFill=0;strokeColor=#2E86C1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="UserSvc" target="topic5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
 
-    <!-- KITCHEN SERVICE: KitchenEventConsumer -->
-    <mxCell id="30" value="«kafka consumer»&#xa;KitchenEventConsumer&#xa;(kitchen-service)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
-      <mxGeometry x="870" y="100" width="280" height="100" as="geometry" />
-    </mxCell>
-    <mxCell id="31" value="group: kitchen-service-group" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
-      <mxGeometry y="40" width="280" height="20" as="geometry" />
-    </mxCell>
-    <mxCell id="32" value="+ handleOrderReceived(msg): void&#xa;  Enqueues to Redis kitchen queue" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="30">
-      <mxGeometry y="60" width="280" height="40" as="geometry" />
-    </mxCell>
+        <!-- ═══ Topic → Broker edges ═══ -->
+        <mxCell id="tb1" style="endArrow=open;endFill=0;strokeColor=#231F20;" edge="1" parent="1" source="topic1" target="KafkaBroker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tb2" style="endArrow=open;endFill=0;strokeColor=#231F20;" edge="1" parent="1" source="topic2" target="KafkaBroker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tb3" style="endArrow=open;endFill=0;strokeColor=#231F20;" edge="1" parent="1" source="topic3" target="KafkaBroker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tb4" style="endArrow=open;endFill=0;strokeColor=#231F20;" edge="1" parent="1" source="topic4" target="KafkaBroker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tb5" style="endArrow=open;endFill=0;strokeColor=#231F20;" edge="1" parent="1" source="topic5" target="KafkaBroker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
 
-    <!-- NOTIFICATIONS SERVICE: NotificationEventConsumer -->
-    <mxCell id="33" value="«kafka consumer»&#xa;NotificationEventConsumer&#xa;(notifications-service)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
-      <mxGeometry x="1200" y="100" width="300" height="200" as="geometry" />
-    </mxCell>
-    <mxCell id="34" value="group: notifications-service-group" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="33">
-      <mxGeometry y="40" width="300" height="20" as="geometry" />
-    </mxCell>
-    <mxCell id="35" value="+ handleOrderReceived(msg): void&#xa;  Pushes STOMP + raw WS + logs&#xa;+ handleOrderStatusUpdated(msg): void&#xa;  Pushes STOMP + email + raw WS + logs&#xa;+ handleOrderReady(msg): void&#xa;  Pushes STOMP + logs&#xa;+ handleEmailSend(msg): void&#xa;  Sends via SMTP/Brevo" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="33">
-      <mxGeometry y="60" width="300" height="140" as="geometry" />
-    </mxCell>
+        <!-- ═══ Broker → Consumer edges ═══ -->
+        <mxCell id="bc1" value="kitchen.order.*" style="endArrow=open;endFill=0;strokeColor=#1E8449;" edge="1" parent="1" source="KafkaBroker" target="KitchenSvc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bc2" value="order.*.event" style="endArrow=open;endFill=0;strokeColor=#6C3483;" edge="1" parent="1" source="KafkaBroker" target="AnalyticsSvcC">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bc3" value="notification.*" style="endArrow=open;endFill=0;strokeColor=#922B21;" edge="1" parent="1" source="KafkaBroker" target="NotificationsSvc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
 
-    <!-- ANALYTICS SERVICE: AnalyticsEventConsumer -->
-    <mxCell id="36" value="«kafka consumer»&#xa;AnalyticsEventConsumer&#xa;(analytics-report-service)" style="swimlane;fontStyle=1;align=center;startSize=40;container=1;collapsible=0;expand=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
-      <mxGeometry x="870" y="270" width="280" height="150" as="geometry" />
-    </mxCell>
-    <mxCell id="37" value="group: analytics-report-service-group" style="text;align=left;strokeColor=none;fillColor=#fff2cc;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="36">
-      <mxGeometry y="40" width="280" height="20" as="geometry" />
-    </mxCell>
-    <mxCell id="38" value="+ handleOrderReceived(msg): void&#xa;  Records OrderAnalytics + OrderItemAnalytics&#xa;+ handleOrderStatusUpdated(msg): void&#xa;  Updates OrderAnalytics.status&#xa;+ handleDailyRollup(msg): void&#xa;  Calls computeDailySummaries(date)" style="text;align=left;strokeColor=none;fillColor=#d5e8d4;spacingLeft=6;overflow=hidden;rotatable=0;" vertex="1" parent="36">
-      <mxGeometry y="60" width="280" height="90" as="geometry" />
-    </mxCell>
+        <!-- ═══ Infrastructure Row ═══ -->
+        <mxCell id="infra_label" value="&lt;b&gt;INFRASTRUCTURE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#566573;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="200" height="30" as="geometry" />
+        </mxCell>
 
-    <!-- Downstream effects: Kitchen Redis -->
-    <mxCell id="40" value="Redis Kitchen Queue&#xa;branchId -&gt; [KitchenOrder, ...]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="870" y="220" width="260" height="40" as="geometry" />
-    </mxCell>
+        <!-- MySQL (Order) -->
+        <mxCell id="I_OrderDB" value="MySQL&#xa;order_db" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#007DB8;strokeColor=#004f78;fontColor=#ffffff;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="745" width="120" height="110" as="geometry" />
+        </mxCell>
 
-    <!-- Downstream effects: STOMP push -->
-    <mxCell id="41" value="STOMP WebSocket&#xa;/topic/customer/{customerId}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="1200" y="320" width="240" height="40" as="geometry" />
-    </mxCell>
+        <!-- Outbox Pattern note -->
+        <mxCell id="OutboxNote" value="&lt;b&gt;Transactional Outbox Pattern&lt;/b&gt;&lt;br&gt;Order + OutboxEvent saved atomically&lt;br&gt;OutboxRelay polls and publishes to Kafka" style="text;html=1;strokeColor=#D35400;fillColor=#FDEBD0;align=left;verticalAlign=top;spacingLeft=4;rounded=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="220" y="755" width="260" height="75" as="geometry" />
+        </mxCell>
 
-    <!-- Downstream: Email -->
-    <mxCell id="42" value="SMTP Email / Brevo API&#xa;(order status notifications)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="1200" y="380" width="240" height="40" as="geometry" />
-    </mxCell>
+        <!-- Redis (Kitchen) -->
+        <mxCell id="I_Redis" value="Redis&#xa;Kitchen Queue" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#DC382D;strokeColor=#A01E1E;fontColor=#ffffff;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="530" y="745" width="120" height="110" as="geometry" />
+        </mxCell>
 
-    <!-- Downstream: Raw WebSocket -->
-    <mxCell id="43" value="Raw WebSocket Handlers&#xa;kitchen/order/manager channels" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="1200" y="440" width="240" height="40" as="geometry" />
-    </mxCell>
+        <!-- MySQL (Analytics) -->
+        <mxCell id="I_AnalyticsDB" value="MySQL&#xa;analytics_db" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#007DB8;strokeColor=#004f78;fontColor=#ffffff;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="710" y="745" width="130" height="110" as="geometry" />
+        </mxCell>
 
-    <!-- Downstream: NotificationLog DB -->
-    <mxCell id="44" value="NotificationLog (MySQL)&#xa;persisted for audit + history" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="1200" y="500" width="240" height="50" as="geometry" />
-    </mxCell>
+        <!-- SMTP/Brevo -->
+        <mxCell id="I_Email" value="SMTP / Brevo&#xa;Email Delivery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAD7A0;strokeColor=#CA6F1E;fontColor=#784212;fontStyle=0;fontSize=11;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="900" y="765" width="170" height="75" as="geometry" />
+        </mxCell>
 
-    <!-- Downstream: Analytics DB -->
-    <mxCell id="45" value="OrderAnalytics + OrderItemAnalytics&#xa;+ BranchDailySummary (MySQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="870" y="450" width="280" height="50" as="geometry" />
-    </mxCell>
+        <!-- MySQL (Notifications) -->
+        <mxCell id="I_NotifDB" value="MySQL&#xa;notifications_db" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#007DB8;strokeColor=#004f78;fontColor=#ffffff;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="745" width="140" height="110" as="geometry" />
+        </mxCell>
 
-    <!-- ====== PRODUCER → TOPIC ARROWS ====== -->
-    <!-- OutboxRelay → order.received -->
-    <mxCell id="100" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#d79b00;" edge="1" source="10" target="20" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- OutboxRelay → order.status.updated -->
-    <mxCell id="101" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#d79b00;" edge="1" source="10" target="21" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- OutboxRelay → order.ready -->
-    <mxCell id="102" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#d79b00;" edge="1" source="10" target="22" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- KafkaEmailProducer → notification.email.send -->
-    <mxCell id="103" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#d79b00;" edge="1" source="13" target="23" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
+        <!-- Infrastructure edges -->
+        <mxCell id="ie1" value="reads/writes" style="dashed=1;endArrow=open;endFill=0;strokeColor=#007DB8;" edge="1" parent="1" source="OrderSvc" target="I_OrderDB">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie2" value="stores queue" style="dashed=1;endArrow=open;endFill=0;strokeColor=#DC382D;" edge="1" parent="1" source="KitchenSvc" target="I_Redis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie3" value="persists metrics" style="dashed=1;endArrow=open;endFill=0;strokeColor=#007DB8;" edge="1" parent="1" source="AnalyticsSvcC" target="I_AnalyticsDB">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie4" value="sends via" style="dashed=1;endArrow=open;endFill=0;strokeColor=#CA6F1E;" edge="1" parent="1" source="NotificationsSvc" target="I_Email">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ie5" value="logs" style="dashed=1;endArrow=open;endFill=0;strokeColor=#007DB8;" edge="1" parent="1" source="NotificationsSvc" target="I_NotifDB">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
 
-    <!-- ====== TOPIC → CONSUMER ARROWS ====== -->
-    <!-- order.received → KitchenEventConsumer -->
-    <mxCell id="110" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;" edge="1" source="20" target="30" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- order.received → NotificationEventConsumer -->
-    <mxCell id="111" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;" edge="1" source="20" target="33" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- order.received → AnalyticsEventConsumer -->
-    <mxCell id="112" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;" edge="1" source="20" target="36" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- order.status.updated → NotificationEventConsumer -->
-    <mxCell id="113" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;" edge="1" source="21" target="33" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- order.status.updated → AnalyticsEventConsumer -->
-    <mxCell id="114" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;" edge="1" source="21" target="36" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- order.ready → NotificationEventConsumer -->
-    <mxCell id="115" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;" edge="1" source="22" target="33" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- notification.email.send → NotificationEventConsumer -->
-    <mxCell id="116" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;" edge="1" source="23" target="33" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <!-- analytics.daily.rollup → AnalyticsEventConsumer -->
-    <mxCell id="117" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;strokeColor=#82b366;" edge="1" source="24" target="36" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-
-    <!-- Consumer → Downstream -->
-    <mxCell id="120" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="30" target="40" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <mxCell id="121" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="33" target="41" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <mxCell id="122" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="33" target="42" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <mxCell id="123" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="33" target="43" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <mxCell id="124" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="33" target="44" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <mxCell id="125" value="" style="edgeStyle=orthogonalEdgeStyle;endArrow=open;endFill=0;" edge="1" source="36" target="45" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-
-    <!-- Outbox Pattern Note -->
-    <mxCell id="130" value="Transactional Outbox Pattern&#xa;OrderService saves OutboxEvent in same DB transaction as Order.&#xa;OutboxRelay polls every 500ms and publishes unpublished events to Kafka." style="text;html=1;strokeColor=#d79b00;fillColor=#ffe6cc;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="60" y="895" width="500" height="60" as="geometry" />
-    </mxCell>
-
-  </root>
-</mxGraphModel>
+        <!-- Legend -->
+        <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;&lt;br&gt;──▷  publishes / consumes&lt;br&gt;╌╌▷  persists / sends&lt;br&gt;⬡  Apache Kafka Broker&lt;br&gt;○  Kafka Topic" style="text;html=1;strokeColor=#AAAAAA;fillColor=#FAFAFA;align=left;verticalAlign=top;spacingLeft=6;rounded=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="80" width="180" height="105" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
